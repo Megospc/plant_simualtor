@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=700px, user-scalable=yes">
+  <title>Симулятор Растений - редактор</title>
+  <link rel="icon" href="assets/icon.svg">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <noscript id="noscript"><b>Похоже вы отключили JavaScript, пожалуйста включите его.</b></noscript>
+  <noscript id="noscripthelp"><a href="help.html#noscript"><b>Подробнее</b></a></noscript>
+  <div id="editor" style="display: none">
+    <div id="top">
+      <div><input type="text" id="name" value="без названия" onchange="window.name = this.value;">
+      <button onclick="lssg()" id="lssg"><img src="assets/lssg.svg" height="15"></button></div>
+      <button onclick="playgame()" id="play"><div><img src="assets/play.svg" height="10"></div>запуск</button>
+      <button onclick="downloadgame()" id="save"><div><img src="assets/download.svg" height="10"></div>скачать</button>
+      <button onclick="window.open('help.html')" id="help"><div><img src="assets/help.svg" height="10"></div>помощь</button>
+      <button onclick="$show('opengame'); $hide('editor')" id="open"><div><img src="assets/open.svg" height="10"></div>открыть</button>
+    </div>
+    <div style="margin-top: 10px; margin-bottom: 10px;"><b class="header">Настройки:</b></div>
+    <div id="options"></div>
+    <p class="add" onclick="addopt();">Дополнительно <img src="assets/down.svg" id="aopen" width="12"></p>
+    <div id="add" style="display: none">
+      <div id="resolution">
+        <p class="label">Разрешение: </p>
+        <p class="label" id="resshow">1800р </p>
+        <button id="res900" onclick="window.resolution = 900; $('resshow').innerHTML='900р '; savesets();" class="resolution">900р (×1)</button>
+        <button id="res1800" onclick="window.resolution = 1800; $('resshow').innerHTML='1800р '; savesets();" class="resolution">1800р (×2)</button>
+        <button id="res2700" onclick="window.resolution = 2700; $('resshow').innerHTML='2700р '; savesets();" class="resolution">2700р (×3)</button>
+        <button id="res3600" onclick="window.resolution = 3600; $('resshow').innerHTML='3600р '; savesets();" class="resolution">3600р (×4)</button>
+      </div>
+      <div id="speed">
+        <p class="label">Скорость показа: </p>
+        <p class="label">x</p>
+        <input type="number" style="width: 40px;" onchange="checknum(this, 0.01, 10, false); window.showspeed = Number(this.value);" id="speedshow" value="1">
+        <button id="speed_0.1" onclick="window.showspeed = 0.1; $('speedshow').value = 0.1;" class="speed">x0.1</button>
+        <button id="speed_0.2" onclick="window.showspeed = 0.2; $('speedshow').value = 0.2;" class="speed">x0.2</button>
+        <button id="speed_0.5" onclick="window.showspeed = 0.5; $('speedshow').value = 0.5;" class="speed">x0.5</button>
+        <button id="speed_1" onclick="window.showspeed = 1; $('speedshow').value = 1;" class="speed">x1</button>
+        <button id="speed_2" onclick="window.showspeed = 2; $('speedshow').value = 2;" class="speed">x2</button>
+        <button id="speed_5" onclick="window.showspeed = 5; $('speedshow').value = 5;" class="speed">x5</button>
+      </div>
+      <div><input type="checkbox" id="music" onchange="window.music = this.checked; savesets();" checked>
+      <label for="music" class="label">Музыка</label></div>
+      <div id="vibratediv" style="display: none"><input type="checkbox" id="vibrate" onchange="window.vibrate = this.checked; savesets();">
+      <label for="vibrate" class="label">Вибрации</label></div>
+      <div><input type="checkbox" id="biggraph" onchange="window.biggraph = this.checked; savesets();">
+      <label for="biggraph" class="label">Большой график</label></div>
+      <div><input type="checkbox" id="graphmove" onchange="window.graphmove = this.checked; savesets();">
+      <label for="graphmove" class="label">Сдвиг графика</label></div>
+      <div><p id="fullscreen" onclick="fullScreen(document.documentElement)">Полный экран</p></div>
+      <div><div><label for="description" class="label">Описание:</label></div>
+      <textarea id="description" onchange="window.description = this.value"></textarea></div>
+    </div>
+    <div style="margin-top: 10px"><b class="header">Виды растений:</b></div>
+    <button style="margin-top: 10px" class="newobj" onclick="newplant()">+ новое</button>
+    <div id="plants"></div>
+  </div>
+  <div id="opengame" style="display: none">
+    <div><button onclick="$hide('opengame'); $show('editor');" id="back">назад</button></div>
+    <div><button onclick="lsog();" id="lsog">загрузить точку сохранения</button></div>
+    <div><input type="file" id="file" onchange="opengame(this.files[0]);"></div>
+    <div><textarea id="console" readonly></textarea></div>
+  </div>
+</body>
+</html>
+<script src="utils.js"></script>
+<script src="editor.js"></script>

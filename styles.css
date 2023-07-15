@@ -1,0 +1,185 @@
+#noscripthelp {
+  color: #0000ff;
+  font-family: Monospace, sans-serif;
+  font-size: 18px;
+}
+#noscript {
+  color: #a00000;
+  font-family: Monospace, sans-serif;
+  font-size: 18px;
+}
+#back {
+  margin-bottom: 10px;
+  font-size: 12px;
+  font-family: Monospace, sans-serif;
+  background: linear-gradient(to right, #f0a0a0, #ff8080);
+  border-radius: 3px;
+  border: 2px solid #f05050;
+}
+#lsog {
+  margin-bottom: 10px;
+  font-size: 12px;
+  font-family: Monospace, sans-serif;
+  background: linear-gradient(to right, #f0b0a0, #ffc080);
+  border-radius: 3px;
+  border: 2px solid #d09050;
+}
+.pselect {
+  font-family: Monospace, sans-serif;
+  font-size: 11px;
+  height: 17px;
+  border-radius: 3px;
+  border: 1px solid #808080;
+  border-radius: 3px;
+  display: inline;
+}
+#description {
+  font-family: Monospace, sans-serif;
+  font-size: 12px;
+  width: 250px;
+  height: 100px;
+  border-radius: 3px;
+  border: 1px solid #808080;
+  resize: none;
+}
+#fullscreen {
+  font-family: Monospace, sans-serif;
+  font-size: 8px;
+}
+#lssg {
+  background-color: transparent;
+  border: none;
+}
+#play {
+  background: linear-gradient(to right, #ffa0a0, #ff8080);
+  font-family: Monospace, sans-serif;
+  border: 2px solid #f05050;
+  color: #a00000;
+  border-radius: 3px;
+  width: 65px;
+  height: 40px;
+}
+#save {
+  background: linear-gradient(to right, #a0a0ff, #8080ff);
+  font-family: Monospace, sans-serif;
+  border: 2px solid #5050f0;
+  color: #0000a0;
+  border-radius: 3px;
+  width: 75px;
+  height: 40px;
+}
+#open {
+  background: linear-gradient(to right, #a0ffa0, #80ff80);
+  font-family: Monospace, sans-serif;
+  border: 2px solid #50f050;
+  color: #00a000;
+  border-radius: 3px;
+  width: 75px;
+  height: 40px;
+}
+#help {
+  background: linear-gradient(to right, #ffd0a0, #ffd080);
+  font-family: Monospace, sans-serif;
+  border: 2px solid #f0c010;
+  color: #a09000;
+  border-radius: 3px;
+  width: 65px;
+  height: 40px;
+}
+.colorsel {
+  width: 30px;
+  height: 30px;
+  display: inline;
+  padding: 0px;
+}
+.color {
+  width: 15px;
+  height: 15px;
+  border-radius: 3px;
+  border-width: 2px;
+  border-style: solid;
+}
+.name {
+  font-size: 15px;
+  font-family: Monospace, sans-serif;
+  width: 110px;
+  height: 20px;
+  border: 1px solid #808080;
+  border-radius: 3px;
+}
+.namediv {
+  height: 30px;
+}
+input[type="number"] {
+  width: 50px;
+  height: 13px;
+  border-radius: 3px;
+  border: 1px solid #808080;
+  font-family: Monospace, sans-serif;
+  font-size: 12px;
+  display: inline;
+}
+.label {
+  font-family: Monospace, sans-serif;
+  font-size: 12px;
+  display: inline;
+}
+.header {
+  font-family: Monospace, sans-serif;
+  font-size: 20px;
+}
+.newobj {
+  margin-bottom: 10px;
+  font-size: 12px;
+  font-family: Monospace, sans-serif;
+  background: linear-gradient(to right, #a0a0ff, #8080ff);
+  border-radius: 3px;
+  border: 2px solid #5050f0;
+}
+#name {
+  width: 200px;
+  height: 20px;
+  font-family: Monospace, sans-serif;
+  font-size: 14px;
+  border: 1px solid #808080;
+  border-radius: 3px;
+  margin-bottom: 10px;
+}
+#console {
+  resize: none;
+  width: 500px;
+  height: 200px;
+  font-family: Monospace, sans-serif;
+  font-size: 12px;
+  border-radius: 5px;
+  border: 1px solid #300030;
+}
+input[type="file"] {
+  margin-bottom: 10px;
+  font-family: Monospace, sans-serif;
+  font-size: 12px;
+}
+.add {
+  font-family: Monospace, sans-serif;
+  font-size: 15px;
+}
+.resolution {
+  display: inline;
+  background: linear-gradient(to right, #a030a0, #f050f0);
+  font-family: Monospace, sans-serif;
+  border: 2px solid #901090;
+  color: #500050;
+  border-radius: 3px;
+  height: 18px;
+  font-size: 6px;
+}
+.speed {
+  display: inline;
+  background: linear-gradient(to right, #a030a0, #f050f0);
+  font-family: Monospace, sans-serif;
+  border: 2px solid #901090;
+  color: #500050;
+  border-radius: 3px;
+  height: 18px;
+  font-size: 6px;
+}
