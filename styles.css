@@ -183,3 +183,11 @@ input[type="file"] {
   height: 18px;
   font-size: 6px;
 }
+#musictype {
+  font-family: Monospace, sans-serif;
+  width: 15px;
+  height: 15px;
+  background-color: transparent;
+  border: none;
+  display: inline;
+}

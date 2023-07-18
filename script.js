@@ -17,7 +17,7 @@
 /////                                                /////
 //////////////////////////////////////////////////////////
 
-const version = "0.5.0"; //Версия программы
+const version = "0.6.4"; //Версия программы
 const fps = 30; //Количество кадров в секунду
 const fpsTime = 1000/fps; //Миллисекунд на кадр
 const font = "Monospace"; //Шрифт текста
@@ -69,7 +69,8 @@ const defaultJSON = `{
       "ngrowmax": 40,
       "repeat": 1,
       "rtimemin": 2,
-      "rtimemax": 40
+      "rtimemax": 40,
+      "fvalue": 10
     },
     {
       "name": "растение 2",
@@ -83,7 +84,9 @@ const defaultJSON = `{
       "fruitsmax": 4,
       "fzone": 40,
       "ngrowmin": 2,
-      "ngrowmax": 40
+      "ngrowmax": 40,
+      "fvalue": 10,
+      "boom": 0.5
     },
     {
       "name": "растение 3",
@@ -97,7 +100,8 @@ const defaultJSON = `{
       "fruitsmax": 6,
       "fzone": 40,
       "ngrowmin": 2,
-      "ngrowmax": 40
+      "ngrowmax": 40,
+      "fvalue": 10
     },
     {
       "name": "атака",
@@ -116,7 +120,25 @@ const defaultJSON = `{
       "azone": 60,
       "carn": 0.01,
       "czone": 60,
-      "cadd": 10
+      "cadd": 10,
+      "toxic": 1,
+      "fvalue": 30
+    }
+  ],
+  "animals": [
+    {
+      "name": "животное 1",
+      "color": "#a08000",
+      "initial": 1,
+      "change": 0.1,
+      "speed": 5,
+      "prob": 0.02,
+      "zone": 40,
+      "hungry": 300,
+      "hunincr": 0.5,
+      "muln": 600,
+      "clezone": 100,
+      "cleprob": 0.1
     }
   ]
 }`; //JSON симуляции по-умолчанию
@@ -124,10 +146,11 @@ const json = sessionStorage.getItem('plant_simulator_json') ?? defaultJSON; //JS
 const obj = JSON.parse(json); //Объект симуляции
 const options = obj.options; //Объект настроек
 const style = obj.style; //Объект стиля
-const plants = obj.plants; //Массив состояний
+const plants = obj.plants; //Массив видов растений
+const animals = obj.animals ?? []; //Массив видов животных
 const canvas = $('canvas'); //Объект холста
 const ctx = canvas.getContext('2d'); //Контекст холста
-const music = new Audio("assets/music.mp3"); //Музыка от zvukipro.com
+const music = new Audio("assets/music"+(options.musictype ?? 0)+".mp3"); //Музыка от zvukipro.com
 var frame; //Счётчик кадров
 var arr; //Массив объектов
 var ground; //Массив земли
@@ -200,7 +223,11 @@ function sort() { //Метод сортировки статистики
   
   //Заполнение массива:
   for (let i = 0; i < plants.length; i++) {
-    let st = plants[i];
+    const st = plants[i];
+    if (!(st.hidden || st.hiddenstat)) sorted.push(st); //Если не указанно "не отображать на статистике"
+  }
+  for (let i = 0; i < animals.length; i++) {
+    const st = animals[i];
     if (!(st.hidden || st.hiddenstat)) sorted.push(st); //Если не указанно "не отображать на статистике"
   }
   
@@ -229,8 +256,9 @@ function biggraph() { //Метод отрисовки большого граф�
   //Поиск максимального значения:
   let max = 2;
   for (let t = start; t < stats.length; t++) {
-    for (let i = 0; i < plants.length; i++) {
-      if (!(plants[i].hidden || plants[i].hiddengraph)) { //Если не указанно "не отображать на графике"
+    for (let i = 0; i < plants.length+animals.length; i++) {
+      const p = i < plants.length ? plants[i]:animals[i-plants.length];
+      if (!(p.hidden || p.hiddengraph)) { //Если не указанно "не отображать на графике"
         const count = stats[t][i];
         if (count > max) max = count;
       }
@@ -263,8 +291,9 @@ function biggraph() { //Метод отрисовки большого граф�
   ctx.lineWidth = S(3);
   ctx.lineCap = "butt";
   if (frame) {
-    for (let i = 0; i < plants.length; i++) { //Отрисовка линии вида
-      if (!(plants[i].hidden || plants[i].hiddengraph)) { //Если не указанно "не отображать на графике"
+    for (let i = 0; i < plants.length+animals.length; i++) { //Отрисовка линии вида
+      const p = i < plants.length ? plants[i]:animals[i-plants.length];
+      if (!(p.hidden || p.hiddengraph)) { //Если не указанно "не отображать на графике"
         ctx.beginPath();
         for (let x = 0; x < 290; x++) {
           const ci = Math.floor(x/290*size)+start;
@@ -272,7 +301,7 @@ function biggraph() { //Метод отрисовки большого граф�
           if (x == 0) ctx.moveTo(S(x+530), S(y+40));
           else ctx.lineTo(S(x+530), S(y+40));
         }
-        ctx.strokeStyle = plants[i].color;
+        ctx.strokeStyle = p.color;
         ctx.stroke();
       }
     }
@@ -286,12 +315,11 @@ function graph() {
   //Поиск максимального значения:
   let max = 2;
   for (let t = start; t < stats.length; t++) {
-    for (let i = 0; i < plants.length; i++) {
-      if (!(plants[i].hidden || plants[i].hiddengraph)) {
-        let ct = stats[t][i];
-        if (ct > max) {
-          max = ct;
-        }
+    for (let i = 0; i < plants.length+animals.length; i++) {
+      const p = i < plants.length ? plants[i]:animals[i-plants.length];
+      if (!(p.hidden || p.hiddengraph)) { //Если не указанно "не отображать на графике"
+        const count = stats[t][i];
+        if (count > max) max = count;
       }
     }
   }
@@ -320,8 +348,9 @@ function graph() {
   ctx.lineWidth = S(2);
   ctx.lineCap = "butt";
   if (frame) {
-    for (let i = 0; i < plants.length; i++) { //Отрисовка линии вида
-      if (!(plants[i].hidden || plants[i].hiddengraph)) { //Если не указанно "не отображать на графике"
+    for (let i = 0; i < plants.length+animals.length; i++) { //Отрисовка линии вида
+      const p = i < plants.length ? plants[i]:animals[i-plants.length];
+      if (!(p.hidden || p.hiddengraph)) { //Если не указанно "не отображать на графике"
         ctx.beginPath();
         for (let x = 0; x < 160; x++) {
           const ci = Math.floor(x/160*size)+start;
@@ -329,7 +358,7 @@ function graph() {
           if (x == 0) ctx.moveTo(S(x+690), S(y));
           else ctx.lineTo(S(x+690), S(y));
         }
-        ctx.strokeStyle = plants[i].color;
+        ctx.strokeStyle = p.color;
         ctx.stroke();
       }
     }
@@ -376,7 +405,7 @@ function resize() { //Метод масштабирования холста
   canvas.style.top = Math.floor(Y)+"px";
   canvas.style.left = Math.floor(X)+"px";
   
-  //Сохраненин характеристик холста:
+  //Сохранение характеристик холста:
   cprops = {
     left: X,
     top: Y,
@@ -462,7 +491,7 @@ class Ground { //Класс земли
 
 class Fly { //Класс мух
   constructor(x, y) {
-    //Установка координат
+    //Установка координат:
     const fsize = options.size*options.gsize; //Полный размер поля
     this.x = testCord(x ?? random(fsize), style.flysize);
     this.y = testCord(y ?? random(fsize), style.flysize);
@@ -491,10 +520,115 @@ class Fly { //Класс мух
     ctx.fillRect(S((x-style.flysize/2)*scale+15), S((y-style.flysize/2)*scale+15), S(style.flysize*scale), S(style.flysize*scale));
     ctx.fillRect(S((x-style.flysize/4)*scale+15), S((y-style.flysize/4)*scale+15), S(style.flysize/2*scale), S(style.flysize/2*scale));
   }
-  rspeed() { //Метод установки скорсти
+  rspeed() { //Метод установки скорости
     this.speed = {
       x: rand(-options.flyspeed, options.flyspeed),
       y: rand(-options.flyspeed, options.flyspeed)
+    };
+  }
+}
+
+class Animal { //Класс животных
+  constructor(state, x, y) {
+    this.state = state; //Вид животного
+    
+    //Установка координат:
+    const fsize = options.size*options.gsize; //Полный размер поля
+    this.x = testCord(x ?? random(fsize), style.flysize);
+    this.y = testCord(y ?? random(fsize), style.flysize);
+    this.rspeed(); //Установка скорости
+    this.init(); //Инициализация
+    
+    this.id = register(this, "animal"); //Регистрация животного
+  }
+  init() { //Метод инициализации
+    const state = animals[this.state]; //Вид животного
+    state.counter++; //Обновление счётчика
+    this.hungry = state.hungry; //Уровень сытости
+  }
+  dead() { //Метод смерти
+    const state = animals[this.state]; //Вид животного
+    state.counter--; //Обновление счётчика
+    deregister(this.id); //Дерегистрация животного
+  }
+  handler() { //Метод обработчика
+    const state = animals[this.state]; //Вид животного
+    if (rnd() < state.change) this.rspeed(); //Смена скорости
+    
+    if (this.hungry > state.muln) { //Размножение
+      new Animal(this.state, this.x, this.y); //Новое животное
+      this.hungry -= state.hungry; //Трата сытости
+    }
+    
+    //Движение:
+    this.x = testCord(this.x+this.speed.x, style.flysize);
+    this.y = testCord(this.y+this.speed.y, style.flysize);
+    
+    if (state.prob && state.zone) { //Атака
+      for (let i = 0; i < arr.length; i++) {
+        const p = arr[i];
+        if (p.type != "plant") continue; //Если это не растение — пропустить
+        if (!p.avail) continue; //Если растение мертво — пропустить
+        const o = p.obj; //Объект растения
+        if (o.faze == 0) continue; //Если это семя — пропустить
+        const s = plants[o.state]; //Вид растения
+        if (s.big && !state.big) continue; //Свойство "Большое"
+        if (zone(o, this, state.zone)) if (rnd() < state.prob) { //Если растение в зоне атаки и вероятность сбылась
+          if (rnd() < s.protect) continue; //Если защита растения сработала
+          if (rnd() < s.boom) o.fruits(); //Свойство "Взрывное"
+          this.hungry += (s.fvalue ?? 50)*(o.faze == 1 ? o.grow*s.faze:1); //Прибавление сытости
+          o.dead(); //Растение погибает
+          if (rnd() < (s.toxic ?? 0)) { //Свойство "Ядовитое"
+            this.dead(); //Смерть от яда
+            return;
+          }
+        }
+      }
+    }
+    
+    if (state.clezone && state.cleprob) { //Свойство "Умное"
+      for (let i = 0; i < arr.length; i++) {
+        const p = arr[i];
+        if (p.type != "plant") continue; //Если это не растение — пропустить
+        if (!p.avail) continue; //Если растение мертво — пропустить
+        const o = p.obj; //Объект растения
+        if (o.faze == 0) continue; //Если это семя — пропустить
+        const s = plants[o.state]; //Вид растения
+        if (zone(o, this, state.clezone)) if (rnd() < state.cleprob) { //Если растение в зоне и вероятность сбылась
+          //Разницы позиций:
+          const dx = o.x-this.x;
+          const dy = o.y-this.y;
+          
+          const max = Math.max(Math.abs(dx), Math.abs(dy)); //Максимальная разница
+          
+          //Установка скорости:
+          this.speed = {
+            x: dx/max*random(state.speed),
+            y: dy/max*random(state.speed)
+          };
+        }
+      }
+    }
+    
+    this.hungry -= state.hunincr ?? 1; //Трата сытости
+    if (this.hungry <= 0) this.dead(); //Смерть от голода
+  }
+  render() { //Метод отрисовки
+    const state = animals[this.state]; //Вид животного
+    ctx.fillStyle = state.color;
+    ctx.beginPath();
+    ctx.moveTo(S((this.x)*scale+15), S((this.y-style.size/2)*scale+15));
+    ctx.lineTo(S((this.x+style.size/2)*scale+15), S((this.y)*scale+15));
+    ctx.lineTo(S((this.x)*scale+15), S((this.y+style.size/2)*scale+15));
+    ctx.lineTo(S((this.x-style.size/2)*scale+15), S((this.y)*scale+15));
+    ctx.closePath();
+    ctx.fill();
+  }
+  rspeed() { //Метод установки скорости
+    const state = animals[this.state]; //Вид животного
+    this.speed = {
+      x: rand(-state.speed, state.speed),
+      y: rand(-state.speed, state.speed)
     };
   }
 }
@@ -509,7 +643,7 @@ class Plant { //Класс растений
     //0 — Семя
     //1 — Рост
     //2 — Цветение
-    //3 — Плодонесение
+    //3 — Плодоношение
     //4 — Отдых
     
     this.init(); //Инициализация
@@ -519,7 +653,7 @@ class Plant { //Класс растений
     this.x = testCord(x ?? random(fsize), style.size);
     this.y = testCord(y ?? random(fsize), style.size);
   }
-  init() {
+  init() { //Метод инициализации
     const state = plants[this.state]; //Вид растения
     this.ngrow = rand(state.ngrowmin, state.ngrowmax); //Время роста семени
     state.counter++; //Обновление счётчика
@@ -560,24 +694,18 @@ class Plant { //Класс растений
     }
     
     if (res) {
-      this.grow += this.add ?? 1; //Получение удалось — прибавление роста
+      this.grow += state.add ?? 1; //Получение удалось — прибавление роста
       const n = this.faze == 0 || this.faze == 4 ? this.ngrow:state.faze; //Необходимый рост
       if (this.grow >= n) { //Если рост достаточен
         this.faze++; //Новая фаза
         this.grow = 0; //Сброс роста
         if (this.faze == 4) { //Полный рост
-          const fruits = Math.floor(rand(state.fruitsmin, state.fruitsmax));
-          const hsize = style.size/2;
-          for (let i = 0; i < fruits; i++) { //"Разброс" плодов
-            const x = this.x+rand(-state.fzone, state.fzone);
-            const y = this.y+rand(-state.fzone, state.fzone);
-            new Plant(this.state, x, y);
-          }
+          this.fruits();
           if (state.repeat > this.repeat) { //Свойство "Повтор"
             this.repeat++; //Обновление счётчика повторений
             this.ngrow = rand(state.rtimemin, state.rtimemax); //Установка таймера
           } else {
-            this.dead(); //Смерть (конец жизненнго цикла)
+            this.dead(); //Смерть (конец жизненного цикла)
             return;
           }
         }
@@ -594,8 +722,9 @@ class Plant { //Класс растений
         if (p.type != "plant") continue; //Если это не растение — пропустить
         if (!p.avail) continue; //Если растение мертво — пропустить
         const o = p.obj; //Объект растения
+        if (o.faze == 0) continue; //Если это семя — пропустить
         if (o.state == this.state) continue; //Если растение того же вида — пропустить
-        if (zone(o, this, state.azone)) if (rnd() < state.attack)  o.dead(); //Если растение в зоне атаки и вероятность сбылась, оно погибает
+        if (zone(o, this, state.azone)) if (rnd() < state.attack) o.dead(); //Если растение в зоне атаки и вероятность сбылась, оно погибает
       }
     }
   }
@@ -633,7 +762,7 @@ class Plant { //Класс растений
           ctx.fill();
         };
         break;
-      case 3: //Плодонесение
+      case 3: //Плодоношение
         fig = function(size) {
           const s = style.size*size;
           ctx.beginPath();
@@ -652,6 +781,15 @@ class Plant { //Класс растений
     }
     ctx.fillStyle = color;
     fig.call(this, 1);
+  }
+  fruits() { //Метод разброса фруктов
+    const state = plants[this.state]; //Вид растения
+    const fruits = Math.floor(rand(state.fruitsmin, state.fruitsmax));
+    for (let i = 0; i < fruits; i++) { //Разброс плодов
+      const x = this.x+rand(-state.fzone, state.fzone);
+      const y = this.y+rand(-state.fzone, state.fzone);
+      new Plant(this.state, x, y);
+    }
   }
 }
 
@@ -679,6 +817,13 @@ function start() { //Метод инициализации
     for (let i = 0; i < state.initial; i++) new Plant(j); //Создание растений
   }
   
+  //Инициализация животных:
+  for (let j = 0; j < animals.length; j++) { //Для каждого состояния
+    const state = animals[j];
+    state.counter = 0; //Счётчик популяции
+    for (let i = 0; i < state.initial; i++) new Animal(j); //Создание животных
+  }
+  
   //Инициализация мух:
   for (let i = 0; i < options.flycount; i++) new Fly();
   
@@ -691,20 +836,24 @@ function frame_() { //Метод кадра
   const FPS = 1000/(performance.now()-lastFrame); //Текущее количество кадров в секунду
   lastFrame = performance.now(); //Установка последнего кадра
   
-  if (!pause) { //Сохранение популяций:
+  if (!pause) {
     //Расчёт суммарной популяции:
     let sum = 0;
     for (let i = 0; i < plants.length; i++) sum += plants[i].counter;
+    for (let i = 0; i < animals.length; i++) sum += animals[i].counter;
     
+    //Сохранение популяций:
     let counts = [];
     for (let i = 0; i < plants.length; i++) counts[i] = plants[i].counter;
+    for (let i = 0; i < animals.length; i++) counts[i+plants.length] = animals[i].counter;
     counts.sum = sum;
     stats.push(counts);
     
-    
-    for (let i = 0; i < arr.length; i++) if (arr[i].avail) arr[i].obj.handler(); //Обработка объетков
+    for (let i = 0; i < arr.length; i++) if (arr[i].avail) arr[i].obj.handler(); //Обработка объектов
     for (let x = 0; x < options.size; x++) for (let y = 0; y < options.size; y++) ground[x][y].incr(); //Восстановление минералов
   }
+  
+  if (arr.length) while (!arr[arr.length-1].avail) arr.pop(); //Очистка массива
   
   clear();
   if (style.ground) for (let x = 0; x < options.size; x++) for (let y = 0; y < options.size; y++) ground[x][y].render(x*options.gsize*scale+15, y*options.gsize*scale+15, options.gsize*scale, options.gsize*scale);
@@ -741,6 +890,7 @@ function frame_() { //Метод кадра
     //Расчёт суммарной популяции:
     let sum = 0;
     for (let i = 0; i < plants.length; i++) sum += plants[i].counter;
+    for (let i = 0; i < animals.length; i++) sum += animals[i].counter;
     
     ctx.fillText(sum + " | сумма", S(490), S(style.biggraph ? 350:150));
     
@@ -878,5 +1028,6 @@ function click(e) { //Обработчик кликов
 window.addEventListener('resize', resize);
 window.onload = function() {
   resize();
+  if (navigator.wakeLock) navigator.wakeLock.request("screen"); //Отключение затемнения экрана
   document.addEventListener('click', click); //Объявление обработчика кликов
 };

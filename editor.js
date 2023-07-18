@@ -1,4 +1,4 @@
-const version = "0.5.0";  //Версия программы
+const version = "0.6.4";  //Версия программы
 const options_list = [ //Список настроек
   { id: "size", type: "num", default: 28, check: [8, 50, true], label: "Размер поля: ", f: x => x, g: x => x },
   { id: "ggreen", type: "num", default: 250, check: [50, 10000, false], label: "Изначальный зелёный: ", f: x => x, g: x => x },
@@ -16,7 +16,7 @@ const options_list = [ //Список настроек
   { id: "cred", type: "num", default: 100, check: [0, 10000, false], label: "Добавка красного: ", f: x => x, g: x => x },
   { id: "btype", type: "sel", cases: () => ["зацикленные", "зеркальные", "обычные"], label: "Тип бортиков: ", f: x => ["thor", "bounce", "lemit"][x], g: x => ["thor", "bounce", "lemit"].indexOf(x) }
 ];
-const props_list = [ //Список свойств
+const plants_props_list = [ //Список свойств
   { id: "faze", type: "num", default: 12, check: [1, 500, true], label: "Длина фазы: ", f: x => x, g: x => x },
   { id: "consg", type: "num", default: 1, check: [0, 100, false], label: "Потребление зелёного: ", add: true, f: x => x, g: x => x },
   { id: "consb", type: "num", default: 1, check: [0, 100, false], label: "Потребление синего: ", add: true, f: x => x, g: x => x },
@@ -25,8 +25,8 @@ const props_list = [ //Список свойств
   { id: "fruitsmin", type: "num", default: 1, check: [0, 100, true], label: "Количиство плодов (мин.): ", f: x => x, g: x => x },
   { id: "fruitsmax", type: "num", default: 3, check: [0, 100, true], label: "Количиство плодов (макс.): ", f: x => x+1, g: x => x-1 },
   { id: "fzone", type: "num", default: 50, check: [0, 2500, false], label: "Зона плодов: ", f: x => x, g: x => x },
-  { id: "ngrowmin", type: "num", default: 2, check: [0, 10000, false], label: "Рост семени (мин.): ", add: true, f: x => x, g: x => x },
-  { id: "ngrowmax", type: "num", default: 40, check: [0, 10000, false], label: "Рост семени (макс.): ", add: true, f: x => x+1, g: x => x-1 },
+  { id: "ngrowmin", type: "num", default: 2, check: [0, 1000, false], label: "Рост семени (мин.): ", add: true, f: x => x, g: x => x },
+  { id: "ngrowmax", type: "num", default: 40, check: [0, 1000, false], label: "Рост семени (макс.): ", add: true, f: x => x+1, g: x => x-1 },
   { id: "repeat", type: "num", default: 1, check: [1, 1000, false], label: "Количество циклов: ", add: true, f: x => x-1, g: x => x+1 },
   { id: "rtimemin", type: "num", default: 2, check: [1, 1000, false], label: "Длина отдыха (мин.): ", add: true, f: x => x, g: x => x },
   { id: "rtimemax", type: "num", default: 40, check: [1, 1000, false], label: "Длина отдыха (макс.): ", add: true, f: x => x-1, g: x => x+1 },
@@ -34,15 +34,35 @@ const props_list = [ //Список свойств
   { id: "azone", type: "num", default: 50, check: [1, 2500, false], label: "Атака — зона: ", add: true, f: x => x, g: x => x },
   { id: "protect", type: "num", default: 0, check: [0, 100, false], label: "Защита: ", add: true, f: x => x/100, g: x => x*100 },
   { id: "carn", type: "num", default: 0, check: [0, 100, false], label: "Хищное — вероятность: ", add: true, f: x => x/100, g: x => x*100 },
-  { id: "czone", type: "num", default: 50, check: [1, 2500, false], label: "Хищное — зона: ", add: true, f: x => x, g: x => x },
-  { id: "cadd", type: "num", default: 10, check: [1, 500, true], label: "Хищное — ценность: ", add: true, f: x => x, g: x => x },
-  { id: "add", type: "num", default: 1, check: [0, 5, false], label: "Скорость роста: ", add: true, f: x => x, g: x => x }
+  { id: "czone", type: "num", default: 50, check: [0, 2500, false], label: "Хищное — зона: ", add: true, f: x => x, g: x => x },
+  { id: "cadd", type: "num", default: 10, check: [0, 500, true], label: "Хищное — ценность: ", add: true, f: x => x, g: x => x },
+  { id: "boom", type: "num", default: 0, check: [0, 100, false], label: "Взрывное: ", add: true, f: x => x/100, g: x => x*100 },
+  { id: "add", type: "num", default: 1, check: [0, 5, false], label: "Скорость роста: ", add: true, f: x => x, g: x => x },
+  { id: "fvalue", type: "num", default: 10, check: [0, 1000, false], label: "Питательность: ", add: true, f: x => x, g: x => x },
+  { id: "toxic", type: "num", default: 0, check: [0, 100, false], label: "Ядовитое: ", add: true, f: x => x/100, g: x => x*100 },
+  { id: "big", type: "chk", default: false, label: "Большое", add: true, f: x => x, g: x => x }
+];
+const animals_props_list = [
+  { id: "initial", type: "num", default: 1, check: [0, 1000, true], label: "Изначальная популяция: ", f: x => x, g: x => x },
+  { id: "hungry", type: "num", default: 200, check: [1, 10000, false], label: "Изначальная сытость: ", f: x => x, g: x => x },
+  { id: "speed", type: "num", default: 5, check: [1, 10, false], label: "Скорость: ", f: x => x, g: x => x },
+  { id: "prob", type: "num", default: 2, check: [0, 100, false], label: "Вероятность: ", f: x => x/100, g: x => x*100 },
+  { id: "zone", type: "num", default: 50, check: [0, 100, false], label: "Зона: ", f: x => x, g: x => x },
+
+  { id: "hinc", type: "num", default: 0.5, check: [0, 10, false], label: "Прожорливость: ", add: true, f: x => x, g: x => x },
+  { id: "muln", type: "num", default: 400, check: [0, 20000, false], label: "Порог размножения: ", add: true, f: x => x, g: x => x },
+  { id: "cleprob", type: "num", default: 0, check: [0, 100, false], label: "Умное — вероятность: ", add: true, f: x => x/100, g: x => x*100 },
+  { id: "clezone", type: "num", default: 100, check: [0, 2500, false], label: "Умное — зона: ", add: true, f: x => x, g: x => x },
+  { id: "big", type: "chk", default: false, label: "Большое", add: true, f: x => x, g: x => x }
 ];
 
 var name = "без названия"; //Имя симуляции
 var planti = 0; //Индекс растения
 var plantsid = []; //Массив индефикаторов растений
 var plants_addprops = []; //Массив дополнительных свойств растений
+var animali = 0; //Индекс животного
+var animalsid = []; //Массив индефикаторов животных
+var animals_addprops = []; //Массив дополнительных свойств животных
 var addopen = false;
 var description = ""; //Описание
 var resolution = 1800; //Разрешение
@@ -51,6 +71,7 @@ var music = true; //Музыка
 var vibrate = false; //Вибрации
 var biggraph = false; //Большой график
 var graphmove = true; //Сдвиг графика
+var musictype = 0; //Тип музыки
 
 function check(num, arr) { //Функция проверки числа
   if (arr[2]) num = Math.floor(num);
@@ -60,7 +81,7 @@ function check(num, arr) { //Функция проверки числа
 function json() { //Функция создания JSON симуляции
   const style = { //Стиль симуляции
     size: 5,
-    resolution: 1800,
+    resolution: resolution,
     sort: true,
     flysize: 3,
     flyanim: 10,
@@ -71,23 +92,25 @@ function json() { //Функция создания JSON симуляции
   };
   const options = { //Настройки симуляции
     flych: 0.01,
-    resolution: resolution,
     showspeed: showspeed,
     music: music,
+    musictype: musictype,
     vibrate: vibrate
   };
   
   //Получение настроек:
   for (let i = 0; i < options_list.length; i++) {
     const p = options_list[i];
-    const v = $("options_"+p.id).value;
+    const v = $("options_"+p.id);
     switch (p.type) {
-      case "num": options[p.id] = p.f(Number(v)); break;
-      case "sel": options[p.id] = p.f(Number(v)); break;
+      case "num": options[p.id] = p.f(Number(v.value)); break;
+      case "sel": options[p.id] = p.f(Number(v.value)); break;
+      case "chk": options[p.id] = p.f(v.checked); break;
     }
   }
   
   const plants = []; //Массив видов растений
+  const animals = []; //Массив видов животных
   
   //Подучение видов растений:
   for (let i = 0; i < plantsid.length; i++) {
@@ -98,12 +121,34 @@ function json() { //Функция создания JSON симуляции
       hiddenstat: !$("plant_hiddenstat"+id).checked,
       hiddengraph: !$("plant_hiddengraph"+id).checked
     };
-    for (let j = 0; j < props_list.length; j++) {
-      const p = props_list[j];
-      const v = $("plant_"+p.id+id).value;
+    for (let j = 0; j < plants_props_list.length; j++) {
+      const p = plants_props_list[j];
+      const v = $("plant_"+p.id+id);
       switch (p.type) {
-        case "num": plants[i][p.id] = p.f(Number(v)); break;
-        case "sel": plants[i][p.id] = p.f(Number(v)); break;
+        case "num": plants[i][p.id] = p.f(Number(v.value)); break;
+        case "sel": plants[i][p.id] = p.f(Number(v.value)); break;
+        case "chk": plants[i][p.id] = p.f(v.checked); break;
+      }
+    }
+  }
+  
+  //Подучение видов животных:
+  for (let i = 0; i < animalsid.length; i++) {
+    const id = animalsid[i];
+    animals[i] = {
+      name: $("animal_name"+id).value,
+      color: $("animal_color"+id).value,
+      hiddenstat: !$("animal_hiddenstat"+id).checked,
+      hiddengraph: !$("animal_hiddengraph"+id).checked,
+      change: 0.01
+    };
+    for (let j = 0; j < animals_props_list.length; j++) {
+      const p = animals_props_list[j];
+      const v = $("animal_"+p.id+id);
+      switch (p.type) {
+        case "num": animals[i][p.id] = p.f(Number(v.value)); break;
+        case "sel": animals[i][p.id] = p.f(Number(v.value)); break;
+        case "chk": animals[i][p.id] = p.f(v.checked); break;
       }
     }
   }
@@ -114,7 +159,8 @@ function json() { //Функция создания JSON симуляции
     version: version,
     style: style,
     options: options,
-    plants: plants
+    plants: plants,
+    animals: animals
   };
   return JSON.stringify(obj); //Создание JSON
 }
@@ -126,12 +172,13 @@ function newplant(name) { //Новый вид растения
   
   let props = ""; //Основные свойства
   let aprops = ""; //Дополнительные свойства
-  console.log(id)
-  for (let i = 0; i < props_list.length; i++) {
-    const p = props_list[i];
+  
+  for (let i = 0; i < plants_props_list.length; i++) {
+    const p = plants_props_list[i];
     let str;
     switch (p.type) {
       case "num": str = `<div><label class="label" for="plant_${p.id}${id}">${p.label}</label><input id="plant_${p.id}${id}" type="number" onchange="this.value = check(this.value, ${JSON.stringify(p.check)})" value="${p.default}"></div>`; break;
+      case "chk": str = `<div><input id="plant_${p.id}${id}" type="checkbox" ${p.default ? "checked":""}><label class="label" for="plant_${p.id}${id}">${p.label}</label></div>`; break;
     }
     if (p.add) aprops += str;
     else props += str;
@@ -179,7 +226,7 @@ function newplant(name) { //Новый вид растения
   ${props}
   <p class="add" onclick="add(${id})">Дополнительно <img id="plant_aopen${id}" src="assets/down.svg" width="12"></p>
   <div id="plant_add${id}" style="display: none">${aprops}</div>`;
-  $('plants').appendChild(div)
+  $('plants').appendChild(div);
   return id;
 }
 
@@ -189,7 +236,6 @@ function deleteplant(id) { //Удаление вида растения
   //Поиск индефикатора в списке:
   for (let i = 0; i < plantsid.length; i++) if (plantsid[i] == id) plantsid.splice(i, 1); //Удаление
 }
-
 function copyplant(id) { //Копирование вида растения
   //Получение нового имени:
   const name = $("plant_name"+id).value;
@@ -212,10 +258,126 @@ function copyplant(id) { //Копирование вида растения
   
   //Копирование свойств:
   $("plant_color"+nid).value = $("plant_color"+id).value;
-  for (let i = 0; i < props_list.length; i++) $("plant_"+props_list[i].id+nid).value = $("plant_"+props_list[i].id+id).value;
+  for (let i = 0; i < plants_props_list.length; i++) {
+    const p = plants_props_list[i];
+    switch (p.type) {
+      case "num": $("plant_"+p.id+nid).value = $("plant_"+p.id+id).value;
+      case "sel": $("plant_"+p.id+nid).value = $("plant_"+p.id+id).value;
+      case "chk": $("plant_"+p.id+nid).checked = $("plant_"+p.id+id).checked;
+    }
+  }
 }
 
-function add(id) { //Скрыть/показать дополнительные свойства
+function smusictype(i) { //Тип музыки
+  if (typeof i == "number") musictype = i;
+  else musictype = (musictype+1)%2;
+  $('musictype').innerHTML = ["", "*"][musictype];
+}
+
+function newanimal(name) { //Новый вид животного
+  //Индефикаторы:
+  const id = animali++;
+  animalsid.push(id);
+  
+  let props = ""; //Основные свойства
+  let aprops = ""; //Дополнительные свойства
+  
+  for (let i = 0; i < animals_props_list.length; i++) {
+    const p = animals_props_list[i];
+    let str;
+    switch (p.type) {
+      case "num": str = `<div><label class="label" for="animal_${p.id}${id}">${p.label}</label><input id="animal_${p.id}${id}" type="number" onchange="this.value = check(this.value, ${JSON.stringify(p.check)})" value="${p.default}"></div>`; break;
+      case "chk": str = `<div><input id="animal_${p.id}${id}" type="checkbox" ${p.default ? "checked":""}><label class="label" for="animal_${p.id}${id}">${p.label}</label></div>`; break;
+    }
+    if (p.add) aprops += str;
+    else props += str;
+  }
+  
+  const div = $create('div');
+  div.id = "animal"+id;
+  div.innerHTML = `
+  <div class="namediv">
+    <input class="name" type="text" id="animal_name${id}" value="${name ?? "без названия"}">
+    <button style="background-color: #00000000; border: none; display: inline;" onclick="deleteanimal(${id})"><img src="assets/delete.svg" height="12"></button>
+    <button style="background-color: #00000000; border: none; display: inline;" onclick="copyanimal(${id})"><img src="assets/copy.svg" height="12"></button>
+    <input type="checkbox" id="animal_hiddenstat${id}" style="display: inline" checked>
+    <input type="checkbox" id="animal_hiddengraph${id}" style="display: inline" checked>
+  </div>
+  <div>
+    <input type="color" id="animal_color${id}" class="colorsel" value="#000000">
+    <button class="color" style="background-color: #a00000; border-color: #900000;" onclick="$('animal_color${id}').value='#a00000'"></button>
+    <button class="color" style="background-color: #a02800; border-color: #902400;" onclick="$('animal_color${id}').value='#a02800'"></button>
+    <button class="color" style="background-color: #a05000; border-color: #904800;" onclick="$('animal_color${id}').value='#a05000'"></button>
+    <button class="color" style="background-color: #a07800; border-color: #906c00;" onclick="$('animal_color${id}').value='#a07800'"></button>
+    <button class="color" style="background-color: #a0a000; border-color: #909000;" onclick="$('animal_color${id}').value='#a0a000'"></button>
+    <button class="color" style="background-color: #78a000; border-color: #6c9000;" onclick="$('animal_color${id}').value='#78a000'"></button>
+    <button class="color" style="background-color: #50a000; border-color: #489000;" onclick="$('animal_color${id}').value='#50a000'"></button>
+    <button class="color" style="background-color: #28a000; border-color: #249000;" onclick="$('animal_color${id}').value='#28a000'"></button>
+    <button class="color" style="background-color: #00a000; border-color: #009000;" onclick="$('animal_color${id}').value='#00a000'"></button>
+    <button class="color" style="background-color: #00a028; border-color: #009024;" onclick="$('animal_color${id}').value='#00a028'"></button>
+    <button class="color" style="background-color: #00a050; border-color: #009048;" onclick="$('animal_color${id}').value='#00a050'"></button>
+    <button class="color" style="background-color: #00a078; border-color: #00906c;" onclick="$('animal_color${id}').value='#00a078'"></button>
+    <button class="color" style="background-color: #00a0a0; border-color: #009090;" onclick="$('animal_color${id}').value='#00a0a0'"></button>
+    <button class="color" style="background-color: #0078a0; border-color: #006c90;" onclick="$('animal_color${id}').value='#0078a0'"></button>
+    <button class="color" style="background-color: #0050a0; border-color: #004890;" onclick="$('animal_color${id}').value='#0050a0'"></button>
+    <button class="color" style="background-color: #0028a0; border-color: #002490;" onclick="$('animal_color${id}').value='#0028a0'"></button>
+    <button class="color" style="background-color: #0000a0; border-color: #000090;" onclick="$('animal_color${id}').value='#0000a0'"></button>
+    <button class="color" style="background-color: #2800a0; border-color: #240090;" onclick="$('animal_color${id}').value='#2800a0'"></button>
+    <button class="color" style="background-color: #5000a0; border-color: #480090;" onclick="$('animal_color${id}').value='#5000a0'"></button>
+    <button class="color" style="background-color: #7800a0; border-color: #6c0090;" onclick="$('animal_color${id}').value='#7800a0'"></button>
+    <button class="color" style="background-color: #a000a0; border-color: #900090;" onclick="$('animal_color${id}').value='#a000a0'"></button>
+    <button class="color" style="background-color: #a00078; border-color: #90006c;" onclick="$('animal_color${id}').value='#a00078'"></button>
+    <button class="color" style="background-color: #a00050; border-color: #900048;" onclick="$('animal_color${id}').value='#a00050'"></button>
+    <button class="color" style="background-color: #a00028; border-color: #900024;" onclick="$('animal_color${id}').value='#a00028'"></button>
+    <button class="color" style="background-color: #000000; border-color: #202020;" onclick="$('animal_color${id}').value='#000000'"></button>
+    <button class="color" style="background-color: #808080; border-color: #707070;" onclick="$('animal_color${id}').value='#808080'"></button>
+  </div>
+  ${props}
+  <p class="add" onclick="aadd(${id})">Дополнительно <img id="animal_aopen${id}" src="assets/down.svg" width="12"></p>
+  <div id="animal_add${id}" style="display: none">${aprops}</div>`;
+  $('animals').appendChild(div);
+  return id;
+}
+
+function deleteanimal(id) { //Удаление вида растения
+  $("animal"+id).remove(); //Удаление HTML
+  
+  //Поиск индефикатора в списке:
+  for (let i = 0; i < animalsid.length; i++) if (animalsid[i] == id) animalsid.splice(i, 1); //Удаление
+}
+function copyanimal(id) { //Копирование вида растения
+  //Получение нового имени:
+  const name = $("animal_name"+id).value;
+  const nums = ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9"];
+  let str = "";
+  let wstr = "";
+  let b = true;
+  for (let i = name.length-1; i >= 0; i--) {
+    if (nums.includes(name[i]) && b) str = name[i]+str;
+    else {
+      wstr = name[i] + wstr;
+      b = false;
+    }
+  }
+  let nname = name;
+  if (str.length) nname = wstr+(Number(str)+1);
+  else nname += " 2";
+  
+  const nid = newanimal(nname);
+  
+  //Копирование свойств:
+  $("animal_color"+nid).value = $("animal_color"+id).value;
+  for (let i = 0; i < animals_props_list.length; i++) {
+    const p = animals_props_list[i];
+    switch (p.type) {
+      case "num": $("animal_"+p.id+nid).value = $("animal_"+p.id+id).value;
+      case "sel": $("animal_"+p.id+nid).value = $("animal_"+p.id+id).value;
+      case "chk": $("animal_"+p.id+nid).checked = $("animal_"+p.id+id).checked;
+    }
+  }
+}
+
+function add(id) { //Скрыть/показать дополнительные свойства растений
   if (plants_addprops[id]) {
     plants_addprops[id] = false;
     $("plant_aopen"+id).src = "assets/down.svg";
@@ -224,6 +386,18 @@ function add(id) { //Скрыть/показать дополнительные 
     plants_addprops[id] = true;
     $("plant_aopen"+id).src = "assets/up.svg";
     $show("plant_add"+id);
+  }
+}
+
+function aadd(id) { //Скрыть/показать дополнительные свойства животных
+  if (animals_addprops[id]) {
+    animals_addprops[id] = false;
+    $("animal_aopen"+id).src = "assets/down.svg";
+    $hide("animal_add"+id);
+  } else {
+    animals_addprops[id] = true;
+    $("animal_aopen"+id).src = "assets/up.svg";
+    $show("animal_add"+id);
   }
 }
 
@@ -254,7 +428,8 @@ function savesets() { //Сохраниение дополнительных на
     music: music,
     resolution: resolution,
     biggraph: biggraph,
-    graphmove: graphmove
+    graphmove: graphmove,
+    musictype: musictype
   }));
 }
 
@@ -305,8 +480,11 @@ function readgame(json) { //Чтение JSON
   log("Загрузка...");
   name = obj.name ?? "без названия";
   description = obj.description ?? "";
+  obj.animals ??= [];
   $('description').value = description;
   $('name').value = name;
+  
+  //Расшифровка растений:
   $('plants').innerHTML = "";
   plantsi = 0;
   plantsid = [];
@@ -317,15 +495,35 @@ function readgame(json) { //Чтение JSON
     $("plant_color"+i).value = p.color;
     $("plant_hiddenstat"+i).checked = !p.hiddenstat;
     $("plant_hiddengraph"+i).checked = !p.hiddengraph;
-    for (let j = 0; j < props_list.length; j++) {
-      const o = props_list[j];
+    for (let j = 0; j < plants_props_list.length; j++) {
+      const o = plants_props_list[j];
       $("plant_"+o.id+i).value = o.g(p[o.id]);
     }
   }
+  
+  //Расшифровка растений:
+  $('animals').innerHTML = "";
+  animali = 0;
+  animalsid = [];
+  for (let i = 0; i < obj.animals.length; i++) {
+    const p = obj.animals[i];
+    newanimal();
+    $("animal_name"+i).value = p.name;
+    $("animal_color"+i).value = p.color;
+    $("animal_hiddenstat"+i).checked = !p.hiddenstat;
+    $("animal_hiddengraph"+i).checked = !p.hiddengraph;
+    for (let j = 0; j < animals_props_list.length; j++) {
+      const o = animals_props_list[j];
+      $("animal_"+o.id+i).value = o.g(p[o.id]);
+    }
+  }
+  
+  //Расшифровка настроек:
   for (let i = 0; i < options_list.length; i++) {
     const o = options_list[i];
     $("options_"+o.id).value = o.g(obj.options[o.id]);
   }
+  
   log("Загрузка завершена...");
   $hide('opengame');
   $show('editor');
@@ -362,6 +560,7 @@ window.onload = function() {
     graphmove = saved.graphmove;
     $('biggraph').checked = saved.biggraph;
     biggraph = saved.biggraph;
+    smusictype(saved.musictype);
   }
   $show('editor');
 };

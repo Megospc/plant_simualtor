@@ -3,13 +3,12 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=700px, user-scalable=yes">
-  <title>Симулятор Растений - редактор</title>
+  <title>Симулятор Растений - Редактор</title>
   <link rel="icon" href="assets/icon.svg">
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
   <noscript id="noscript"><b>Похоже вы отключили JavaScript, пожалуйста включите его.</b></noscript>
-  <noscript id="noscripthelp"><a href="help.html#noscript"><b>Подробнее</b></a></noscript>
   <div id="editor" style="display: none">
     <div id="top">
       <div><input type="text" id="name" value="без названия" onchange="window.name = this.value;">
@@ -34,7 +33,7 @@
       <div id="speed">
         <p class="label">Скорость показа: </p>
         <p class="label">x</p>
-        <input type="number" style="width: 40px;" onchange="checknum(this, 0.01, 10, false); window.showspeed = Number(this.value);" id="speedshow" value="1">
+        <input type="number" style="width: 40px;" onchange="this.value = check(this.value, [0.01, 10, false]); window.showspeed = Number(this.value);" id="speedshow" value="1">
         <button id="speed_0.1" onclick="window.showspeed = 0.1; $('speedshow').value = 0.1;" class="speed">x0.1</button>
         <button id="speed_0.2" onclick="window.showspeed = 0.2; $('speedshow').value = 0.2;" class="speed">x0.2</button>
         <button id="speed_0.5" onclick="window.showspeed = 0.5; $('speedshow').value = 0.5;" class="speed">x0.5</button>
@@ -43,7 +42,7 @@
         <button id="speed_5" onclick="window.showspeed = 5; $('speedshow').value = 5;" class="speed">x5</button>
       </div>
       <div><input type="checkbox" id="music" onchange="window.music = this.checked; savesets();" checked>
-      <label for="music" class="label">Музыка</label></div>
+      <label for="music" class="label">Музыка</label><button id="musictype" onclick="smusictype(); savesets();"></button></div>
       <div id="vibratediv" style="display: none"><input type="checkbox" id="vibrate" onchange="window.vibrate = this.checked; savesets();">
       <label for="vibrate" class="label">Вибрации</label></div>
       <div><input type="checkbox" id="biggraph" onchange="window.biggraph = this.checked; savesets();">
@@ -57,11 +56,14 @@
     <div style="margin-top: 10px"><b class="header">Виды растений:</b></div>
     <button style="margin-top: 10px" class="newobj" onclick="newplant()">+ новое</button>
     <div id="plants"></div>
+    <div style="margin-top: 10px"><b class="header">Виды животных:</b></div>
+    <button style="margin-top: 10px" class="newobj" onclick="newanimal()">+ новое</button>
+    <div id="animals"></div>
   </div>
   <div id="opengame" style="display: none">
     <div><button onclick="$hide('opengame'); $show('editor');" id="back">назад</button></div>
-    <div><button onclick="lsog();" id="lsog">загрузить точку сохранения</button></div>
-    <div><input type="file" id="file" onchange="opengame(this.files[0]);"></div>
+    <div><button onclick="lsog()" id="lsog">загрузить точку сохранения</button></div>
+    <div><input type="file" id="file" onchange="opengame(this.files[0])"></div>
     <div><textarea id="console" readonly></textarea></div>
   </div>
 </body>
