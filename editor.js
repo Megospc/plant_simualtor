@@ -40,7 +40,9 @@ const plants_props_list = [ //Список свойств
   { id: "add", type: "num", default: 1, check: [0, 5, false], label: "Скорость роста: ", add: true, f: x => x, g: x => x },
   { id: "fvalue", type: "num", default: 10, check: [0, 1000, false], label: "Питательность: ", add: true, f: x => x, g: x => x },
   { id: "toxic", type: "num", default: 0, check: [0, 100, false], label: "Ядовитое: ", add: true, f: x => x/100, g: x => x*100 },
-  { id: "big", type: "chk", default: false, label: "Большое", add: true, f: x => x, g: x => x }
+  { id: "big", type: "chk", default: false, label: "Большое", add: true, f: x => x, g: x => x },
+  { id: "obscure", type: "chk", default: false, label: "Незаметное", add: true, f: x => x, g: x => x },
+  { id: "nutrient", type: "chk", default: false, label: "Питательное", add: true, f: x => x, g: x => x }
 ];
 const animals_props_list = [
   { id: "initial", type: "num", default: 1, check: [0, 1000, true], label: "Изначальная популяция: ", f: x => x, g: x => x },
@@ -53,7 +55,13 @@ const animals_props_list = [
   { id: "muln", type: "num", default: 400, check: [0, 20000, false], label: "Порог размножения: ", add: true, f: x => x, g: x => x },
   { id: "cleprob", type: "num", default: 0, check: [0, 100, false], label: "Умное — вероятность: ", add: true, f: x => x/100, g: x => x*100 },
   { id: "clezone", type: "num", default: 100, check: [0, 2500, false], label: "Умное — зона: ", add: true, f: x => x, g: x => x },
-  { id: "big", type: "chk", default: false, label: "Большое", add: true, f: x => x, g: x => x }
+  { id: "stomper", type: "num", default: 0, check: [0, 100, false], label: "Топотун: ", add: true, f: x => x/100, g: x => x*100 },
+  { id: "fvalue", type: "num", default: 10, check: [0, 1000, false], label: "Питательность: ", add: true, f: x => x, g: x => x },
+  { id: "toxic", type: "num", default: 0, check: [0, 100, false], label: "Ядовитое: ", add: true, f: x => x/100, g: x => x*100 },
+  { id: "protect", type: "num", default: 0, check: [0, 100, false], label: "Защита: ", add: true, f: x => x/100, g: x => x*100 },
+  { id: "big", type: "chk", default: false, label: "Большое", add: true, f: x => x, g: x => x },
+  { id: "carn", type: "chk", default: false, label: "Хищное", add: true, f: x => x, g: x => x },
+  { id: "obscure", type: "chk", default: false, label: "Незаметное", add: true, f: x => x, g: x => x }
 ];
 
 var name = "без названия"; //Имя симуляции

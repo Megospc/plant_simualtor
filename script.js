@@ -41,6 +41,7 @@ const defaultJSON = `{
     "cblue": 250,
     "cred": 250,
     "btype": "thor",
+    "musictype": 0,
     "music": true
   },
   "style": {
@@ -61,7 +62,7 @@ const defaultJSON = `{
       "consg": 1,
       "consb": 1,
       "consr": 1,
-      "initial": 1,
+      "initial": 3,
       "fruitsmin": 1,
       "fruitsmax": 4,
       "fzone": 210,
@@ -79,7 +80,7 @@ const defaultJSON = `{
       "consg": 1,
       "consb": 1,
       "consr": 1,
-      "initial": 1,
+      "initial": 3,
       "fruitsmin": 1,
       "fruitsmax": 4,
       "fzone": 40,
@@ -95,33 +96,32 @@ const defaultJSON = `{
       "consg": 1,
       "consb": 1,
       "consr": 1,
-      "initial": 1,
+      "initial": 3,
       "fruitsmin": 1,
       "fruitsmax": 6,
       "fzone": 40,
       "ngrowmin": 2,
       "ngrowmax": 40,
-      "fvalue": 10
+      "fvalue": 10,
+      "nutrient": true
     },
     {
-      "name": "атака",
+      "name": "растение 4",
       "color": "#000000",
-      "faze": 30,
+      "faze": 15,
       "consg": 1,
       "consb": 1,
       "consr": 1,
-      "initial": 1,
+      "initial": 3,
       "fruitsmin": 1,
       "fruitsmax": 4,
       "fzone": 80,
       "ngrowmin": 2,
       "ngrowmax": 40,
-      "attack": 0.01,
-      "azone": 60,
       "carn": 0.01,
       "czone": 60,
       "cadd": 10,
-      "toxic": 1,
+      "toxic": 0.1,
       "fvalue": 30
     }
   ],
@@ -129,7 +129,7 @@ const defaultJSON = `{
     {
       "name": "животное 1",
       "color": "#a08000",
-      "initial": 1,
+      "initial": 3,
       "change": 0.1,
       "speed": 5,
       "prob": 0.02,
@@ -138,7 +138,23 @@ const defaultJSON = `{
       "hunincr": 0.5,
       "muln": 600,
       "clezone": 100,
-      "cleprob": 0.1
+      "cleprob": 0.1,
+      "stomper": 0.5
+    },
+    {
+      "name": "жищники",
+      "color": "#800000",
+      "initial": 2,
+      "change": 0.1,
+      "speed": 5,
+      "prob": 0.02,
+      "zone": 40,
+      "hungry": 300,
+      "hunincr": 0.5,
+      "muln": 600,
+      "clezone": 50,
+      "cleprob": 0.1,
+      "carn": true
     }
   ]
 }`; //JSON симуляции по-умолчанию
@@ -491,6 +507,8 @@ class Ground { //Класс земли
 
 class Fly { //Класс мух
   constructor(x, y) {
+    this.speed = {}; //Объект скорости
+    
     //Установка координат:
     const fsize = options.size*options.gsize; //Полный размер поля
     this.x = testCord(x ?? random(fsize), style.flysize);
@@ -521,16 +539,15 @@ class Fly { //Класс мух
     ctx.fillRect(S((x-style.flysize/4)*scale+15), S((y-style.flysize/4)*scale+15), S(style.flysize/2*scale), S(style.flysize/2*scale));
   }
   rspeed() { //Метод установки скорости
-    this.speed = {
-      x: rand(-options.flyspeed, options.flyspeed),
-      y: rand(-options.flyspeed, options.flyspeed)
-    };
+    this.speed.x = rand(-options.flyspeed, options.flyspeed);
+    this.speed.y = rand(-options.flyspeed, options.flyspeed);
   }
 }
 
 class Animal { //Класс животных
   constructor(state, x, y) {
     this.state = state; //Вид животного
+    this.speed = {}; //Объект скорости
     
     //Установка координат:
     const fsize = options.size*options.gsize; //Полный размер поля
@@ -564,48 +581,102 @@ class Animal { //Класс животных
     this.x = testCord(this.x+this.speed.x, style.flysize);
     this.y = testCord(this.y+this.speed.y, style.flysize);
     
-    if (state.prob && state.zone) { //Атака
-      for (let i = 0; i < arr.length; i++) {
-        const p = arr[i];
-        if (p.type != "plant") continue; //Если это не растение — пропустить
-        if (!p.avail) continue; //Если растение мертво — пропустить
-        const o = p.obj; //Объект растения
-        if (o.faze == 0) continue; //Если это семя — пропустить
-        const s = plants[o.state]; //Вид растения
-        if (s.big && !state.big) continue; //Свойство "Большое"
-        if (zone(o, this, state.zone)) if (rnd() < state.prob) { //Если растение в зоне атаки и вероятность сбылась
-          if (rnd() < s.protect) continue; //Если защита растения сработала
-          if (rnd() < s.boom) o.fruits(); //Свойство "Взрывное"
-          this.hungry += (s.fvalue ?? 50)*(o.faze == 1 ? o.grow*s.faze:1); //Прибавление сытости
-          o.dead(); //Растение погибает
-          if (rnd() < (s.toxic ?? 0)) { //Свойство "Ядовитое"
-            this.dead(); //Смерть от яда
-            return;
+    if (state.carn) { //Свойство "Хищное"
+      if (state.prob && state.zone) { //Атака
+        for (let i = 0; i < arr.length; i++) {
+          const p = arr[i];
+          if (p.type != "animal" && p.type != "plant") continue; //Если это не животное и не растение — пропустить
+          if (!p.avail) continue; //Если объект мёртв — пропустить
+          const o = p.obj; //Объект
+          const s = p.type == "animal" ? animals[o.state]:plants[o.state]; //Вид объекта
+          if (p.type == "plant") { //Если это растение
+            if (!s.nutrient) continue; //Если не питательное — пропустить
+            if (o.faze == 0) continue; //Если это семя — пропустить
+          } else if (o.state == this.state) continue; //Если животное того же вида — пропустить
+          
+          if (s.big && !state.big) continue; //Свойство "Большое"
+          if (zone(o, this, state.zone)) if (rnd() < state.prob) { //Если растение в зоне атаки и вероятность сбылась
+            if (rnd() < s.protect) continue; //Если защита объекта сработала
+            if (p.type == "plant") {
+              if (rnd() < s.boom) o.fruits(); //Свойство "Взрывное"
+              if (rnd() < (state.stomper ?? 0)) this.hungry += (s.fvalue ?? 50)*(o.faze == 1 ? o.grow*s.faze:1); //Прибавление сытости и свтойство "Топотун"
+            } else this.hungry += s.fvalue ?? 50; //Прибавление сытости
+            o.dead(); //Растение погибает
+            if (rnd() < (s.toxic ?? 0)) { //Свойство "Ядовитое"
+              this.dead(); //Смерть от яда
+              return;
+            }
           }
         }
       }
-    }
-    
-    if (state.clezone && state.cleprob) { //Свойство "Умное"
-      for (let i = 0; i < arr.length; i++) {
-        const p = arr[i];
-        if (p.type != "plant") continue; //Если это не растение — пропустить
-        if (!p.avail) continue; //Если растение мертво — пропустить
-        const o = p.obj; //Объект растения
-        if (o.faze == 0) continue; //Если это семя — пропустить
-        const s = plants[o.state]; //Вид растения
-        if (zone(o, this, state.clezone)) if (rnd() < state.cleprob) { //Если растение в зоне и вероятность сбылась
-          //Разницы позиций:
-          const dx = o.x-this.x;
-          const dy = o.y-this.y;
-          
-          const max = Math.max(Math.abs(dx), Math.abs(dy)); //Максимальная разница
-          
-          //Установка скорости:
-          this.speed = {
-            x: dx/max*random(state.speed),
-            y: dy/max*random(state.speed)
-          };
+      
+      if (state.clezone && state.cleprob) { //Свойство "Умное"
+        for (let i = 0; i < arr.length; i++) {
+          const p = arr[i];
+          if (p.type != "animal") continue; //Если это не животное — пропустить
+          if (!p.avail) continue; //Если животное мертво — пропустить
+          const o = p.obj; //Объект животного
+          if (o.state == this.state) continue; //Если животное того же вида — пропустить
+          const s = animals[o.state]; //Вид животного
+          if (s.obscure) continue; //Свойство "Незаметное"
+          if (zone(o, this, state.clezone)) if (rnd() < state.cleprob) { //Если животное в зоне и вероятность сбылась
+            //Разницы позиций:
+            const dx = o.x-this.x;
+            const dy = o.y-this.y;
+            
+            const max = Math.max(Math.abs(dx), Math.abs(dy)); //Максимальная разница
+            
+            //Установка скорости:
+            this.speed.x = dx/max*random(state.speed);
+            this.speed.y = dy/max*random(state.speed);
+            
+            console.log(dx, dy)
+          }
+        }
+      }
+    } else {
+      if (state.prob && state.zone) { //Атака
+        for (let i = 0; i < arr.length; i++) {
+          const p = arr[i];
+          if (p.type != "plant") continue; //Если это не растение — пропустить
+          if (!p.avail) continue; //Если растение мертво — пропустить
+          const o = p.obj; //Объект растения
+          if (o.faze == 0) continue; //Если это семя — пропустить
+          const s = plants[o.state]; //Вид растения
+          if (s.big && !state.big) continue; //Свойство "Большое"
+          if (zone(o, this, state.zone)) if (rnd() < state.prob) { //Если растение в зоне атаки и вероятность сбылась
+            if (rnd() < s.protect) continue; //Если защита растения сработала
+            if (rnd() < s.boom) o.fruits(); //Свойство "Взрывное"
+            if (rnd() < (state.stomper ?? 0)) this.hungry += (s.fvalue ?? 50)*(o.faze == 1 ? o.grow*s.faze:1); //Прибавление сытости и свтойство "Топотун"
+            o.dead(); //Растение погибает
+            if (rnd() < (s.toxic ?? 0)) { //Свойство "Ядовитое"
+              this.dead(); //Смерть от яда
+              return;
+            }
+          }
+        }
+      }
+      
+      if (state.clezone && state.cleprob) { //Свойство "Умное"
+        for (let i = 0; i < arr.length; i++) {
+          const p = arr[i];
+          if (p.type != "plant") continue; //Если это не растение — пропустить
+          if (!p.avail) continue; //Если растение мертво — пропустить
+          const o = p.obj; //Объект растения
+          if (o.faze == 0) continue; //Если это семя — пропустить
+          const s = plants[o.state]; //Вид растения
+          if (s.obscure) continue; //Свойство "Незаметное"
+          if (zone(o, this, state.clezone)) if (rnd() < state.cleprob) { //Если растение в зоне и вероятность сбылась
+            //Разницы позиций:
+            const dx = o.x-this.x;
+            const dy = o.y-this.y;
+            
+            const max = Math.max(Math.abs(dx), Math.abs(dy)); //Максимальная разница
+            
+            //Установка скорости:
+            this.speed.x = dx/max*random(state.speed);
+            this.speed.y = dy/max*random(state.speed);
+          }
         }
       }
     }
@@ -626,10 +697,8 @@ class Animal { //Класс животных
   }
   rspeed() { //Метод установки скорости
     const state = animals[this.state]; //Вид животного
-    this.speed = {
-      x: rand(-state.speed, state.speed),
-      y: rand(-state.speed, state.speed)
-    };
+    this.speed.x = rand(-state.speed, state.speed);
+    this.speed.y = rand(-state.speed, state.speed);
   }
 }
 
