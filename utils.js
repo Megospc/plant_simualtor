@@ -27,7 +27,11 @@ function hex(x) {
 const d2r = x => x/180*PI; //Градусы в радианы
 const r2d = x => x*180/PI; //Радианы в градусы
 
-const zone = (a, b, zone) => a.x >= b.x-zone && a.x < b.x+zone && a.y >= b.y-zone && a.y < b.y+zone; //Проверка зоны
+//Расчёты:
+const distance = (a, b) => Math.max(Math.abs(a.x-b.x), Math.abs(a.y-b.y)); //Метрика Минковского
+
+//Проверки:
+const zone = (a, b, zone) => distance(a, b) <= zone; //Проверка зоны
 
 function fullScreen(e) { //Метод полного экрана
   if (e.requestFullscreen) e.requestFullscreen();

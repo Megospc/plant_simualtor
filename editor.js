@@ -1,4 +1,4 @@
-const version = "0.7.0";  //Версия программы
+const version = "0.8.8";  //Версия программы
 const options_list = [ //Список настроек
   { id: "size", type: "num", default: 28, check: [8, 50, true], label: "Размер поля: ", f: x => x, g: x => x },
   { id: "ggreen", type: "num", default: 250, check: [50, 10000, false], label: "Изначальный зелёный: ", f: x => x, g: x => x },
@@ -40,6 +40,12 @@ const plants_props_list = [ //Список свойств
   { id: "add", type: "num", default: 1, check: [0, 5, false], label: "Скорость роста: ", add: true, f: x => x, g: x => x },
   { id: "fvalue", type: "num", default: 10, check: [0, 1000, false], label: "Питательность: ", add: true, f: x => x, g: x => x },
   { id: "toxic", type: "num", default: 0, check: [0, 100, false], label: "Ядовитое: ", add: true, f: x => x/100, g: x => x*100 },
+  { id: "mgzone", type: "num", default: 100, check: [0, 2500, false], label: "Приманка — зона: ", add: true, f: x => x, g: x => x },
+  { id: "mgpow", type: "num", default: 0, check: [0, 15, false], label: "Приманка — сила: ", add: true, f: x => x, g: x => x },
+  { id: "cleaner", type: "num", default: 0, check: [0, 100, false], label: "Очистка: ", add: true, f: x => x/100, g: x => x*100 },
+  { id: "sleprob", type: "num", default: 0, check: [0, 100, false], label: "Сон — вероятность: ", add: true, f: x => x/100, g: x => x*100 },
+  { id: "slezone", type: "num", default: 50, check: [0, 2500, false], label: "Сон — зона: ", add: true, f: x => x, g: x => x },
+  { id: "sleep", type: "num", default: 1, check: [0, 120, false], label: "Сон — длительность: ", add: true, f: x => x*1000, g: x => x/1000 },
   { id: "big", type: "chk", default: false, label: "Большое", add: true, f: x => x, g: x => x },
   { id: "obscure", type: "chk", default: false, label: "Незаметное", add: true, f: x => x, g: x => x },
   { id: "nutrient", type: "chk", default: false, label: "Питательное", add: true, f: x => x, g: x => x }
@@ -100,6 +106,7 @@ function json() { //Функция создания JSON симуляции
   };
   const options = { //Настройки симуляции
     flych: 0.01,
+    flymax: 1000,
     showspeed: showspeed,
     music: music,
     musictype: musictype,
