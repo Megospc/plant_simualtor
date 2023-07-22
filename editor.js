@@ -1,4 +1,4 @@
-const version = "0.9.11";  //Версия программы
+const version = "0.9.12";  //Версия программы
 const options_list = [ //Список настроек
   { id: "size", type: "num", default: 28, check: [8, 50, true], label: "Размер поля: ", f: x => x, g: x => x },
   { id: "ggreen", type: "num", default: 250, check: [50, 10000, false], label: "Изначальный зелёный: ", f: x => x, g: x => x },
@@ -506,7 +506,7 @@ function readgame(json) { //Чтение JSON
   plantsid = [];
   for (let i = 0; i < obj.plants.length; i++) {
     const p = obj.plants[i];
-    $("plant_name"+i).value = p.name;
+    newplant(p.name);
     $("plant_color"+i).value = p.color;
     $("plant_hiddenstat"+i).checked = !p.hiddenstat;
     $("plant_hiddengraph"+i).checked = !p.hiddengraph;
@@ -526,8 +526,7 @@ function readgame(json) { //Чтение JSON
   animalsid = [];
   for (let i = 0; i < obj.animals.length; i++) {
     const p = obj.animals[i];
-    newanimal();
-    $("animal_name"+i).value = p.name;
+    newanimal(p.name);
     $("animal_color"+i).value = p.color;
     $("animal_hiddenstat"+i).checked = !p.hiddenstat;
     $("animal_hiddengraph"+i).checked = !p.hiddengraph;
