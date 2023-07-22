@@ -1,0 +1,81 @@
+{
+  "name": "хищники",
+  "options": {
+    "ggreen": 250,
+    "gblue": 250,
+    "gred": 250,
+    "gigreen": 0.1,
+    "giblue": 0.1,
+    "gired": 0.1,
+    "size": 28,
+    "gsize": 15,
+    "vibrate": true,
+    "cgreen": 250,
+    "cblue": 250,
+    "cred": 250,
+    "btype": "thor",
+    "musictype": 0,
+    "music": true
+  },
+  "style": {
+    "size": 5,
+    "resolution": 1800,
+    "sort": true,
+    "ground": 35
+  },
+  "plants": [
+    {
+      "name": "растение",
+      "color": "#00a000",
+      "faze": 12,
+      "consg": 1,
+      "consb": 1,
+      "consr": 1,
+      "initial": 100,
+      "fruitsmin": 1,
+      "fruitsmax": 4,
+      "fzone": 210,
+      "ngrowmin": 2,
+      "ngrowmax": 40,
+      "repeat": 1,
+      "rtimemin": 2,
+      "rtimemax": 40,
+      "fvalue": 30,
+      "nutrient": true
+    }
+  ],
+  "animals": [
+    {
+      "name": "хищники 1",
+      "color": "#a00000",
+      "initial": 20,
+      "change": 0.1,
+      "speed": 5,
+      "prob": 0.05,
+      "zone": 40,
+      "hungry": 300,
+      "hunincr": 0.5,
+      "muln": 600,
+      "clezone": 50,
+      "cleprob": 0.1,
+      "fvalue": 50,
+      "carn": true
+    },
+    {
+      "name": "хищники 2",
+      "color": "#0000a0",
+      "initial": 20,
+      "change": 0.1,
+      "speed": 5,
+      "prob": 0.05,
+      "zone": 40,
+      "hungry": 300,
+      "hunincr": 0.5,
+      "muln": 600,
+      "clezone": 50,
+      "cleprob": 0.1,
+      "fvalue": 80,
+      "carn": true
+    }
+  ]
+}
