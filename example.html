@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<meta charset="UTF-8">
+<script>
+  window.onload = async function() {
+    const p = new URL(location.href).searchParams;
+    const i = p.get('play');
+    if (i) {
+      const f = await fetch(`examples/example${i}.json`);
+      if (f.ok) {
+        const r = await f.json();
+        const l = localStorage.getItem("plant_simulator_settings");
+        r.options.showspeed = 1;
+        r.style.deadanim = true;
+        r.style.chanim = true;
+        r.style.anim = true;
+        if (l) {
+          const s = JSON.parse(l);
+          if (navigator.vibrate && s.vibrate) r.options.vibrate = s.vibrate;
+          else r.options.vibrate = false;
+          r.style.resolution = s.resolution;
+          r.options.music = s.music;
+          r.options.musictype = s.musictype;
+          r.options.graphmove = s.graphmove;
+          r.options.biggraph = s.biggraph;
+        } else {
+          r.style.resolution = 1800;
+          r.options.music = true;
+          r.options.musictype = 0;
+          r.options.graphmove = false;
+          r.options.biggraph = false;
+        }
+        const e = p.get('edit');
+        sessionStorage.setItem('plant_simulator_'+(e ? 'open':'json'), JSON.stringify(r));
+        location.href = e ? 'index.html':'game.html';
+      } else document.write('Ошибка при загрузке примера');
+    }
+  }
+</script>

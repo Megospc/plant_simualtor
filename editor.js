@@ -1,4 +1,4 @@
-const version = "0.8.8";  //Версия программы
+const version = "0.9.11";  //Версия программы
 const options_list = [ //Список настроек
   { id: "size", type: "num", default: 28, check: [8, 50, true], label: "Размер поля: ", f: x => x, g: x => x },
   { id: "ggreen", type: "num", default: 250, check: [50, 10000, false], label: "Изначальный зелёный: ", f: x => x, g: x => x },
@@ -8,7 +8,7 @@ const options_list = [ //Список настроек
   { id: "giblue", type: "num", default: 0.025, check: [0, 100, false], label: "Восстановление синего: ", f: x => x, g: x => x },
   { id: "gired", type: "num", default: 0.025, check: [0, 100, false], label: "Восстановление красного: ", f: x => x, g: x => x },
   { id: "gsize", type: "num", default: 15, check: [7, 50, true], label: "Размер клетки земли: ", f: x => x, g: x => x },
-  { id: "flycount", type: "num", default: 0, check: [0, 100, true], label: "Количество мух: ", f: x => x, g: x => x },
+  { id: "flycount", type: "num", default: 0, check: [0, 1000, true], label: "Количество мух: ", f: x => x, g: x => x },
   { id: "flymul", type: "num", default: 1, check: [0, 100, false], label: "Размножение мух: ", f: x => x/100, g: x => x*100 },
   { id: "flyspeed", type: "num", default: 5, check: [1, 10, false], label: "Скорость мух: ", f: x => x, g: x => x },
   { id: "cgreen", type: "num", default: 100, check: [0, 10000, false], label: "Добавка зелёного: ", f: x => x, g: x => x },
@@ -65,6 +65,7 @@ const animals_props_list = [
   { id: "fvalue", type: "num", default: 10, check: [0, 1000, false], label: "Питательность: ", add: true, f: x => x, g: x => x },
   { id: "toxic", type: "num", default: 0, check: [0, 100, false], label: "Ядовитое: ", add: true, f: x => x/100, g: x => x*100 },
   { id: "protect", type: "num", default: 0, check: [0, 100, false], label: "Защита: ", add: true, f: x => x/100, g: x => x*100 },
+  { id: "slehun", type: "num", default: 0, check: [0, 10, false], label: "Прожорливость во сне: ", add: true, f: x => x, g: x => x },
   { id: "big", type: "chk", default: false, label: "Большое", add: true, f: x => x, g: x => x },
   { id: "carn", type: "chk", default: false, label: "Хищное", add: true, f: x => x, g: x => x },
   { id: "obscure", type: "chk", default: false, label: "Незаметное", add: true, f: x => x, g: x => x }
@@ -505,18 +506,21 @@ function readgame(json) { //Чтение JSON
   plantsid = [];
   for (let i = 0; i < obj.plants.length; i++) {
     const p = obj.plants[i];
-    newplant();
     $("plant_name"+i).value = p.name;
     $("plant_color"+i).value = p.color;
     $("plant_hiddenstat"+i).checked = !p.hiddenstat;
     $("plant_hiddengraph"+i).checked = !p.hiddengraph;
     for (let j = 0; j < plants_props_list.length; j++) {
       const o = plants_props_list[j];
-      $("plant_"+o.id+i).value = o.g(p[o.id]);
+      switch (o.type) {
+        case "num": $("plant_"+o.id+i).value = typeof v == "undefined" ? o.default:o.g(v); break;
+        case "sel": $("plant_"+o.id+i).value = typeof v == "undefined" ? o.default:o.g(v); break;
+        case "chk": $("plant_"+o.id+i).checked = typeof v == "undefined" ? o.default:o.g(v); break;
+      }
     }
   }
   
-  //Расшифровка растений:
+  //Расшифровка животных:
   $('animals').innerHTML = "";
   animali = 0;
   animalsid = [];
@@ -529,14 +533,24 @@ function readgame(json) { //Чтение JSON
     $("animal_hiddengraph"+i).checked = !p.hiddengraph;
     for (let j = 0; j < animals_props_list.length; j++) {
       const o = animals_props_list[j];
-      $("animal_"+o.id+i).value = o.g(p[o.id]);
+      const v = p[o.id];
+      switch (o.type) {
+        case "num": $("animal_"+o.id+i).value = typeof v == "undefined" ? o.default:o.g(v); break;
+        case "sel": $("animal_"+o.id+i).value = typeof v == "undefined" ? o.default:o.g(v); break;
+        case "chk": $("animal_"+o.id+i).checked = typeof v == "undefined" ? o.default:o.g(v); break;
+      }
     }
   }
   
   //Расшифровка настроек:
   for (let i = 0; i < options_list.length; i++) {
     const o = options_list[i];
-    $("options_"+o.id).value = o.g(obj.options[o.id]);
+    const v = obj.options[o.id];
+    switch (o.type) {
+      case "num": $("options_"+o.id).value = typeof v == "undefined" ? o.default:o.g(v); break;
+      case "sel": $("options_"+o.id).value = typeof v == "undefined" ? o.default:o.g(v); break;
+      case "chk": $("options_"+o.id).checked = typeof v == "undefined" ? o.default:o.g(v); break;
+    }
   }
   
   log("Загрузка завершена...");
@@ -577,5 +591,7 @@ window.onload = function() {
     biggraph = saved.biggraph;
     smusictype(saved.musictype);
   }
+  const open = sessionStorage.getItem("plant_simulator_open");
+  if (open) readgame(open);
   $show('editor');
 };

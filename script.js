@@ -17,10 +17,11 @@
 /////                                                /////
 //////////////////////////////////////////////////////////
 
-const version = "0.8.8"; //Версия программы
+const version = "0.9.11"; //Версия программы
 const fps = 30; //Количество кадров в секунду
 const fpsTime = 1000/fps; //Миллисекунд на кадр
 const font = "Monospace"; //Шрифт текста
+const anim = 1.5; //Размер анимаций
 const defaultJSON = `{
   "name": "Plant Simulator default",
   "options": {
@@ -49,12 +50,10 @@ const defaultJSON = `{
     "size": 5,
     "resolution": 1800,
     "sort": true,
-    "graphmove": true,
     "flysize": 3,
     "flyanim": 10,
     "flycolor": "#00000080",
-    "ground": 35,
-    "anim": 1.5
+    "ground": 35
   },
   "plants": [
     {
@@ -73,7 +72,7 @@ const defaultJSON = `{
       "repeat": 1,
       "rtimemin": 2,
       "rtimemax": 40,
-      "fvalue": 10,
+      "fvalue": 30,
       "cleaner": 1
     },
     {
@@ -89,7 +88,7 @@ const defaultJSON = `{
       "fzone": 40,
       "ngrowmin": 2,
       "ngrowmax": 40,
-      "fvalue": 10,
+      "fvalue": 30,
       "boom": 0.5
     },
     {
@@ -105,7 +104,7 @@ const defaultJSON = `{
       "fzone": 40,
       "ngrowmin": 2,
       "ngrowmax": 40,
-      "fvalue": 10,
+      "fvalue": 30,
       "nutrient": true
     },
     {
@@ -125,7 +124,7 @@ const defaultJSON = `{
       "czone": 60,
       "cadd": 10,
       "toxic": 0.1,
-      "fvalue": 30,
+      "fvalue": 50,
       "mgzone": 100,
       "mgpow": 3
     },
@@ -579,8 +578,8 @@ class Animal { //Класс животных
     
     //Установка координат:
     const fsize = options.size*options.gsize; //Полный размер поля
-    this.x = testCord(x ?? random(fsize), style.flysize);
-    this.y = testCord(y ?? random(fsize), style.flysize);
+    this.x = testCord(x ?? random(fsize), style.size);
+    this.y = testCord(y ?? random(fsize), style.size);
     this.rspeed(); //Установка скорости
     this.init(); //Инициализация
     
@@ -597,12 +596,17 @@ class Animal { //Класс животных
     deregister(this.id); //Дерегистрация животного
   }
   handler() { //Метод обработчика
+    const state = animals[this.state]; //Вид животного
+    
     if (this.sleep) { //Обработка сна
       if (timeNow() > this.sleep) this.sleep = false; //Пробуждение
-      else return; //Продолжение сна
+      else { //Проверка сна
+        this.hungry -= state.slehun ?? 0; //Потребление еды
+        if (this.hungry < 0) this.dead(); //Смерть от голода
+        return;
+      }
     }
     
-    const state = animals[this.state]; //Вид животного
     if (rnd() < state.change) this.rspeed(); //Смена скорости
     
     if (this.hungry > state.muln) { //Размножение
@@ -613,8 +617,8 @@ class Animal { //Класс животных
     }
     
     //Движение:
-    this.x = testCord(this.x+this.speed.x, style.flysize);
-    this.y = testCord(this.y+this.speed.y, style.flysize);
+    this.x = testCord(this.x+this.speed.x, style.size);
+    this.y = testCord(this.y+this.speed.y, style.size);
     
     if (state.carn) { //Свойство "Хищное"
       if (state.prob && state.zone) { //Атака
@@ -625,16 +629,17 @@ class Animal { //Класс животных
           const o = p.obj; //Объект
           const s = p.type == "animal" ? animals[o.state]:plants[o.state]; //Вид объекта
           if (p.type == "plant") { //Если это растение
-            if (!s.nutrient) continue; //Если не питательное — пропустить
+            if (!s.nutrient) continue; //Если растение не питательное — пропустить
             if (o.faze == 0) continue; //Если это семя — пропустить
           } else if (o.state == this.state) continue; //Если животное того же вида — пропустить
           
           if (s.big && !state.big) continue; //Свойство "Большое"
+          console.log(state.zone, distance(o, this))
           if (zone(o, this, state.zone)) if (rnd() < state.prob) { //Если растение в зоне атаки и вероятность сбылась
             if (rnd() < s.protect) continue; //Если защита объекта сработала
             if (p.type == "plant") {
               if (rnd() < s.boom) o.fruits(); //Свойство "Взрывное"
-              if (rnd() < (state.stomper ?? 0)) this.hungry += (s.fvalue ?? 50)*(o.faze == 1 ? o.grow*s.faze:1); //Прибавление сытости и свтойство "Топотун"
+              if (rnd() >= (state.stomper ?? 0)) this.hungry += (s.fvalue ?? 50)*(o.faze == 1 ? o.grow/s.faze:1); //Прибавление сытости и свтойство "Топотун"
               if (rnd() < s.cleaner && this.hungry > state.hungry) this.hungry = state.hungry; //Свойство "Очистка"
             } else this.hungry += s.fvalue ?? 50; //Прибавление сытости
             o.dead(); //Растение погибает
@@ -681,7 +686,7 @@ class Animal { //Класс животных
           if (zone(o, this, state.zone)) if (rnd() < state.prob) { //Если растение в зоне атаки и вероятность сбылась
             if (rnd() < s.protect) continue; //Если защита растения сработала
             if (rnd() < s.boom) o.fruits(); //Свойство "Взрывное"
-            if (rnd() < (state.stomper ?? 0)) this.hungry += (s.fvalue ?? 50)*(o.faze == 1 ? o.grow*s.faze:1); //Прибавление сытости и свтойство "Топотун"
+            if (rnd() >= (state.stomper ?? 0)) this.hungry += (s.fvalue ?? 50)*(o.faze == 1 ? o.grow/s.faze:1); //Прибавление сытости и свтойство "Топотун"
             if (rnd() < s.cleaner && this.hungry > state.hungry) this.hungry = state.hungry; //Свойство "Очистка"
             o.dead(); //Растение погибает
             if (rnd() < (s.toxic ?? 0)) { //Свойство "Ядовитое"
@@ -717,7 +722,7 @@ class Animal { //Класс животных
     }
     
     this.hungry -= state.hunincr ?? 1; //Трата сытости
-    if (this.hungry <= 0) this.dead(); //Смерть от голода
+    if (this.hungry < 0) this.dead(); //Смерть от голода
   }
   render() { //Метод отрисовки
     const state = animals[this.state]; //Вид животного
@@ -734,10 +739,10 @@ class Animal { //Класс животных
     ctx.fillStyle = state.color;
     fig.call(this, 1);
     
-    if (style.anim && this.alen && this.atime+this.alen > timeNow()) { //Отрисовка анимаций
+    if (anim && this.alen && this.atime+this.alen > timeNow()) { //Отрисовка анимаций
       const a = 128-(timeNow()-this.atime)/this.alen*128; //Непрозрачность
       ctx.fillStyle = state.color+hex(a);
-      fig.call(this, style.anim);
+      fig.call(this, anim);
     }
   }
   rspeed() { //Метод установки скорости
@@ -932,10 +937,10 @@ class Plant { //Класс растений
     ctx.fillStyle = state.color;
     fig.call(this, 1);
     
-    if (style.anim && this.alen && this.atime+this.alen > timeNow()) { //Отрисовка анимаций
+    if (anim && this.alen && this.atime+this.alen > timeNow()) { //Отрисовка анимаций
       const a = 128-(timeNow()-this.atime)/this.alen*128; //Непрозрачность
       ctx.fillStyle = state.color+hex(a);
-      fig.call(this, style.anim);
+      fig.call(this, anim);
     }
   }
   fruits() { //Метод разброса фруктов

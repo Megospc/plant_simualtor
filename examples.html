@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <title>Симулятор Растений - Примеры</title>
+  <meta name="viewport" content="width=600px, user-scalable=yes">
+  <link rel="icon" href="assets/icon.svg">
+  <style>
+    a, h1 {
+      font-family: Monospace, sans-serif;
+    }
+    a {
+      font-size: 18px;
+      color: #0000ff;
+    }
+    img {
+      height: 12px;
+      margin-left: 10px;
+    }
+  </style>
+</head>
+<body>
+  <h1 style="margin-bottom: 5px;">Примеры</h1>
+  <div id="examples" style="margin-top: 20px"></div>
+</body>
+</html>
+<script>
+  var num = 0;
+  var examples = document.getElementById('examples');
+  var arr = [
+    "по умолчанию", //21-07-2023
+    "бамбук", //21-07-2023
+    "хищники" //21-07-2023
+  ];
+  example(arr[0]);
+  function example(name) {
+    examples.innerHTML += `<div><a href="example.html?play=${num}" target="_blank"><b>${name}</b></a><a href="examples/example${num}.json" download="${name}.json"><img src="assets/download.svg"></a><a href="example.html?play=${num}&edit=1" target="_blank"><img src="assets/edit.svg"></a></div>`;
+    num++;
+    if (num < arr.length) example(arr[num]);
+  }
+</script>
