@@ -48,3 +48,15 @@ function download(url, name) { //Метод скачивания файла
   
   a.click(); //Переход по ссылке (скачивание)
 }
+
+async function wakelock() { //Метод отключения затемнения экрана
+  if (navigator.wakeLock) {
+    let o = await navigator.wakeLock.request("screen"); //Отключение затемнения экрана
+    o.addEventListener('release', function() { //Если отключение отмененено
+      o = null;
+    });
+    document.addEventListener("visibilitychange", async function() { //Повторная блокировка
+      if (o && document.visibilityState === "visible") wakelock();
+    });
+  }
+}

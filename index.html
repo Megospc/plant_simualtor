@@ -16,7 +16,7 @@
       <button onclick="playgame()" id="play"><div><img src="assets/play.svg" height="10"></div>запуск</button>
       <button onclick="downloadgame()" id="save"><div><img src="assets/download.svg" height="10"></div>скачать</button>
       <button onclick="window.open('help.html')" id="help"><div><img src="assets/help.svg" height="10"></div>помощь</button>
-      <button onclick="$show('opengame'); $hide('editor')" id="open"><div><img src="assets/open.svg" height="10"></div>открыть</button>
+      <button onclick="$show('opengame'); $hide('editor');" id="open"><div><img src="assets/open.svg" height="10"></div>открыть</button>
     </div>
     <div style="margin-top: 10px; margin-bottom: 10px;"><b class="header">Настройки:</b></div>
     <div id="options"></div>
@@ -59,6 +59,9 @@
     <div style="margin-top: 10px"><b class="header">Виды животных:</b></div>
     <button style="margin-top: 10px" class="newobj" onclick="newanimal()">+ новое</button>
     <div id="animals"></div>
+    <div style="margin-top: 10px"><b class="header">Виды грибов:</b></div>
+    <button style="margin-top: 10px" class="newobj" onclick="newfungus()">+ новое</button>
+    <div id="funguses"></div>
   </div>
   <div id="opengame" style="display: none">
     <div><button onclick="$hide('opengame'); $show('editor');" id="back">назад</button></div>

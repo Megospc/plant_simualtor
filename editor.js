@@ -1,4 +1,4 @@
-const version = "0.9.12";  //Версия программы
+const version = "1.0.0";  //Версия программы
 const options_list = [ //Список настроек
   { id: "size", type: "num", default: 28, check: [8, 50, true], label: "Размер поля: ", f: x => x, g: x => x },
   { id: "ggreen", type: "num", default: 250, check: [50, 10000, false], label: "Изначальный зелёный: ", f: x => x, g: x => x },
@@ -9,14 +9,14 @@ const options_list = [ //Список настроек
   { id: "gired", type: "num", default: 0.025, check: [0, 100, false], label: "Восстановление красного: ", f: x => x, g: x => x },
   { id: "gsize", type: "num", default: 15, check: [7, 50, true], label: "Размер клетки земли: ", f: x => x, g: x => x },
   { id: "flycount", type: "num", default: 0, check: [0, 1000, true], label: "Количество мух: ", f: x => x, g: x => x },
-  { id: "flymul", type: "num", default: 1, check: [0, 100, false], label: "Размножение мух: ", f: x => x/100, g: x => x*100 },
+  { id: "flymul", type: "num", default: 1, check: [0, 10, false], label: "Размножение мух: ", f: x => x/100, g: x => x*100 },
   { id: "flyspeed", type: "num", default: 5, check: [1, 10, false], label: "Скорость мух: ", f: x => x, g: x => x },
   { id: "cgreen", type: "num", default: 100, check: [0, 10000, false], label: "Добавка зелёного: ", f: x => x, g: x => x },
   { id: "cblue", type: "num", default: 100, check: [0, 10000, false], label: "Добавка синего: ", f: x => x, g: x => x },
   { id: "cred", type: "num", default: 100, check: [0, 10000, false], label: "Добавка красного: ", f: x => x, g: x => x },
   { id: "btype", type: "sel", cases: () => ["зацикленные", "зеркальные", "обычные"], label: "Тип бортиков: ", f: x => ["thor", "bounce", "lemit"][x], g: x => ["thor", "bounce", "lemit"].indexOf(x) }
 ];
-const plants_props_list = [ //Список свойств
+const plants_props_list = [ //Список свойств растений
   { id: "faze", type: "num", default: 12, check: [1, 500, true], label: "Длина фазы: ", f: x => x, g: x => x },
   { id: "consg", type: "num", default: 1, check: [0, 100, false], label: "Потребление зелёного: ", add: true, f: x => x, g: x => x },
   { id: "consb", type: "num", default: 1, check: [0, 100, false], label: "Потребление синего: ", add: true, f: x => x, g: x => x },
@@ -46,11 +46,14 @@ const plants_props_list = [ //Список свойств
   { id: "sleprob", type: "num", default: 0, check: [0, 100, false], label: "Сон — вероятность: ", add: true, f: x => x/100, g: x => x*100 },
   { id: "slezone", type: "num", default: 50, check: [0, 2500, false], label: "Сон — зона: ", add: true, f: x => x, g: x => x },
   { id: "sleep", type: "num", default: 1, check: [0, 120, false], label: "Сон — длительность: ", add: true, f: x => x*1000, g: x => x/1000 },
+  { id: "paprob", type: "num", default: 0, check: [0, 100, false], label: "Паразит — вероятность: ", add: true, f: x => x/100, g: x => x*100 },
+  { id: "pazone", type: "num", default: 50, check: [0, 2500, false], label: "Паразит — зона: ", add: true, f: x => x, g: x => x },
+  { id: "parasite", type: "num", default: 1, check: [0, 100, false], label: "Паразит — количество: ", add: true, f: x => x, g: x => x },
   { id: "big", type: "chk", default: false, label: "Большое", add: true, f: x => x, g: x => x },
   { id: "obscure", type: "chk", default: false, label: "Незаметное", add: true, f: x => x, g: x => x },
   { id: "nutrient", type: "chk", default: false, label: "Питательное", add: true, f: x => x, g: x => x }
 ];
-const animals_props_list = [
+const animals_props_list = [ //Список свойств животных
   { id: "initial", type: "num", default: 1, check: [0, 1000, true], label: "Изначальная популяция: ", f: x => x, g: x => x },
   { id: "hungry", type: "num", default: 200, check: [1, 10000, false], label: "Изначальная сытость: ", f: x => x, g: x => x },
   { id: "speed", type: "num", default: 5, check: [1, 10, false], label: "Скорость: ", f: x => x, g: x => x },
@@ -66,9 +69,26 @@ const animals_props_list = [
   { id: "toxic", type: "num", default: 0, check: [0, 100, false], label: "Ядовитое: ", add: true, f: x => x/100, g: x => x*100 },
   { id: "protect", type: "num", default: 0, check: [0, 100, false], label: "Защита: ", add: true, f: x => x/100, g: x => x*100 },
   { id: "slehun", type: "num", default: 0, check: [0, 10, false], label: "Прожорливость во сне: ", add: true, f: x => x, g: x => x },
+  { id: "gred", type: "num", default: 0, check: [0, 1000, false], label: "Разложение — красный: ", add: true, f: x => x, g: x => x },
+  { id: "ggreen", type: "num", default: 0, check: [0, 1000, false], label: "Разложение — зелёный: ", add: true, f: x => x, g: x => x },
+  { id: "gblu3", type: "num", default: 0, check: [0, 1000, false], label: "Разложение — синий: ", add: true, f: x => x, g: x => x },
   { id: "big", type: "chk", default: false, label: "Большое", add: true, f: x => x, g: x => x },
   { id: "carn", type: "chk", default: false, label: "Хищное", add: true, f: x => x, g: x => x },
   { id: "obscure", type: "chk", default: false, label: "Незаметное", add: true, f: x => x, g: x => x }
+];
+const funguses_props_list = [ //Список свойств грибов
+  { id: "max", type: "num", default: 420, check: [1, 2500, true], label: "Максимальный размер: ", f: x => x, g: x => x },
+  { id: "consg", type: "num", default: 0.03, check: [0, 100, false], label: "Потребление зелёного: ", add: true, f: x => x, g: x => x },
+  { id: "consb", type: "num", default: 0.03, check: [0, 100, false], label: "Потребление синего: ", add: true, f: x => x, g: x => x },
+  { id: "consr", type: "num", default: 0.03, check: [0, 100, false], label: "Потребление красного: ", add: true, f: x => x, g: x => x },
+  { id: "initial", type: "num", default: 1, check: [0, 1000, true], label: "Изначальная популяция: ", f: x => x, g: x => x },
+  { id: "mul", type: "num", default: 0.5, check: [0, 10, true], label: "Размножение: ", add: true, f: x => x/100, g: x => x*100 },
+  { id: "ngrowmin", type: "num", default: 100, check: [0, 1000, false], label: "Рост гриба-плода (мин.): ", add: true, f: x => x, g: x => x },
+  { id: "ngrowmax", type: "num", default: 200, check: [0, 1000, false], label: "Рост гриба-плода (макс.): ", add: true, f: x => x+1, g: x => x-1 },
+  { id: "protect", type: "num", default: 0, check: [0, 100, false], label: "Защита: ", add: true, f: x => x/100, g: x => x*100 },
+  { id: "grow", type: "num", default: 0.5, check: [0, 5, false], label: "Скорость роста: ", add: true, f: x => x, g: x => x },
+  { id: "toxic", type: "num", default: 0, check: [0, 100, false], label: "Ядовитый: ", add: true, f: x => x/100, g: x => x*100 },
+  { id: "big", type: "chk", default: false, label: "Большой", add: true, f: x => x, g: x => x }
 ];
 
 var name = "без названия"; //Имя симуляции
@@ -78,6 +98,9 @@ var plants_addprops = []; //Массив дополнительных свойс
 var animali = 0; //Индекс животного
 var animalsid = []; //Массив индефикаторов животных
 var animals_addprops = []; //Массив дополнительных свойств животных
+var fungusi = 0; //Индекс животного
+var fungusesid = []; //Массив индефикаторов животных
+var funguses_addprops = []; //Массив дополнительных свойств животных
 var addopen = false;
 var description = ""; //Описание
 var resolution = 1800; //Разрешение
@@ -127,8 +150,9 @@ function json() { //Функция создания JSON симуляции
   
   const plants = []; //Массив видов растений
   const animals = []; //Массив видов животных
+  const funguses = []; //Массив видов грибов
   
-  //Подучение видов растений:
+  //Получение видов растений:
   for (let i = 0; i < plantsid.length; i++) {
     const id = plantsid[i];
     plants[i] = {
@@ -148,7 +172,7 @@ function json() { //Функция создания JSON симуляции
     }
   }
   
-  //Подучение видов животных:
+  //Получение видов животных:
   for (let i = 0; i < animalsid.length; i++) {
     const id = animalsid[i];
     animals[i] = {
@@ -169,6 +193,26 @@ function json() { //Функция создания JSON симуляции
     }
   }
   
+  //Получение видов грибов:
+  for (let i = 0; i < fungusesid.length; i++) {
+    const id = fungusesid[i];
+    funguses[i] = {
+      name: $("fungus_name"+id).value,
+      color: $("fungus_color"+id).value,
+      hiddenstat: !$("fungus_hiddenstat"+id).checked,
+      hiddengraph: !$("fungus_hiddengraph"+id).checked
+    };
+    for (let j = 0; j < funguses_props_list.length; j++) {
+      const p = funguses_props_list[j];
+      const v = $("fungus_"+p.id+id);
+      switch (p.type) {
+        case "num": funguses[i][p.id] = p.f(Number(v.value)); break;
+        case "sel": funguses[i][p.id] = p.f(Number(v.value)); break;
+        case "chk": funguses[i][p.id] = p.f(v.checked); break;
+      }
+    }
+  }
+  
   const obj = { //Объект симуляции
     name: name,
     description: description,
@@ -176,7 +220,8 @@ function json() { //Функция создания JSON симуляции
     style: style,
     options: options,
     plants: plants,
-    animals: animals
+    animals: animals,
+    funguses: funguses
   };
   return JSON.stringify(obj); //Создание JSON
 }
@@ -393,6 +438,110 @@ function copyanimal(id) { //Копирование вида растения
   }
 }
 
+function newfungus(name) { //Новый вид гриба
+  //Индефикаторы:
+  const id = fungusi++;
+  fungusesid.push(id);
+  
+  let props = ""; //Основные свойства
+  let aprops = ""; //Дополнительные свойства
+  
+  for (let i = 0; i < funguses_props_list.length; i++) {
+    const p = funguses_props_list[i];
+    let str;
+    switch (p.type) {
+      case "num": str = `<div><label class="label" for="fungus_${p.id}${id}">${p.label}</label><input id="fungus_${p.id}${id}" type="number" onchange="this.value = check(this.value, ${JSON.stringify(p.check)})" value="${p.default}"></div>`; break;
+      case "chk": str = `<div><input id="fungus_${p.id}${id}" type="checkbox" ${p.default ? "checked":""}><label class="label" for="fungus_${p.id}${id}">${p.label}</label></div>`; break;
+    }
+    if (p.add) aprops += str;
+    else props += str;
+  }
+  
+  const div = $create('div');
+  div.id = "fungus"+id;
+  div.innerHTML = `
+  <div class="namediv">
+    <input class="name" type="text" id="fungus_name${id}" value="${name ?? "без названия"}">
+    <button style="background-color: #00000000; border: none; display: inline;" onclick="deleteplant(${id})"><img src="assets/delete.svg" height="12"></button>
+    <button style="background-color: #00000000; border: none; display: inline;" onclick="copyplant(${id})"><img src="assets/copy.svg" height="12"></button>
+    <input type="checkbox" id="fungus_hiddenstat${id}" style="display: inline" checked>
+    <input type="checkbox" id="fungus_hiddengraph${id}" style="display: inline" checked>
+  </div>
+  <div>
+    <input type="color" id="fungus_color${id}" class="colorsel" value="#804000">
+    <button class="color" style="background-color: #a00000; border-color: #900000;" onclick="$('fungus_color${id}').value='#a00000'"></button>
+    <button class="color" style="background-color: #a02800; border-color: #902400;" onclick="$('fungus_color${id}').value='#a02800'"></button>
+    <button class="color" style="background-color: #a05000; border-color: #904800;" onclick="$('fungus_color${id}').value='#a05000'"></button>
+    <button class="color" style="background-color: #a07800; border-color: #906c00;" onclick="$('fungus_color${id}').value='#a07800'"></button>
+    <button class="color" style="background-color: #a0a000; border-color: #909000;" onclick="$('fungus_color${id}').value='#a0a000'"></button>
+    <button class="color" style="background-color: #78a000; border-color: #6c9000;" onclick="$('fungus_color${id}').value='#78a000'"></button>
+    <button class="color" style="background-color: #50a000; border-color: #489000;" onclick="$('fungus_color${id}').value='#50a000'"></button>
+    <button class="color" style="background-color: #28a000; border-color: #249000;" onclick="$('fungus_color${id}').value='#28a000'"></button>
+    <button class="color" style="background-color: #00a000; border-color: #009000;" onclick="$('fungus_color${id}').value='#00a000'"></button>
+    <button class="color" style="background-color: #00a028; border-color: #009024;" onclick="$('fungus_color${id}').value='#00a028'"></button>
+    <button class="color" style="background-color: #00a050; border-color: #009048;" onclick="$('fungus_color${id}').value='#00a050'"></button>
+    <button class="color" style="background-color: #00a078; border-color: #00906c;" onclick="$('fungus_color${id}').value='#00a078'"></button>
+    <button class="color" style="background-color: #00a0a0; border-color: #009090;" onclick="$('fungus_color${id}').value='#00a0a0'"></button>
+    <button class="color" style="background-color: #0078a0; border-color: #006c90;" onclick="$('fungus_color${id}').value='#0078a0'"></button>
+    <button class="color" style="background-color: #0050a0; border-color: #004890;" onclick="$('fungus_color${id}').value='#0050a0'"></button>
+    <button class="color" style="background-color: #0028a0; border-color: #002490;" onclick="$('fungus_color${id}').value='#0028a0'"></button>
+    <button class="color" style="background-color: #0000a0; border-color: #000090;" onclick="$('fungus_color${id}').value='#0000a0'"></button>
+    <button class="color" style="background-color: #2800a0; border-color: #240090;" onclick="$('fungus_color${id}').value='#2800a0'"></button>
+    <button class="color" style="background-color: #5000a0; border-color: #480090;" onclick="$('fungus_color${id}').value='#5000a0'"></button>
+    <button class="color" style="background-color: #7800a0; border-color: #6c0090;" onclick="$('fungus_color${id}').value='#7800a0'"></button>
+    <button class="color" style="background-color: #a000a0; border-color: #900090;" onclick="$('fungus_color${id}').value='#a000a0'"></button>
+    <button class="color" style="background-color: #a00078; border-color: #90006c;" onclick="$('fungus_color${id}').value='#a00078'"></button>
+    <button class="color" style="background-color: #a00050; border-color: #900048;" onclick="$('fungus_color${id}').value='#a00050'"></button>
+    <button class="color" style="background-color: #a00028; border-color: #900024;" onclick="$('fungus_color${id}').value='#a00028'"></button>
+    <button class="color" style="background-color: #000000; border-color: #202020;" onclick="$('fungus_color${id}').value='#000000'"></button>
+    <button class="color" style="background-color: #808080; border-color: #707070;" onclick="$('fungus_color${id}').value='#808080'"></button>
+    <button class="color" style="background-color: #804000; border-color: #703000;" onclick="$('fungus_color${id}').value='#804000'"></button>
+  </div>
+  ${props}
+  <p class="add" onclick="fadd(${id})">Дополнительно <img id="fungus_aopen${id}" src="assets/down.svg" width="12"></p>
+  <div id="fungus_add${id}" style="display: none">${aprops}</div>`;
+  $('funguses').appendChild(div);
+  return id;
+}
+
+function deletefungus(id) { //Удаление вида растения
+  $("fungus"+id).remove(); //Удаление HTML
+  
+  //Поиск индефикатора в списке:
+  for (let i = 0; i < fungusesid.length; i++) if (fungusesid[i] == id) fungusesid.splice(i, 1); //Удаление
+}
+function copyplant(id) { //Копирование вида растения
+  //Получение нового имени:
+  const name = $("fungus_name"+id).value;
+  const nums = ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9"];
+  let str = "";
+  let wstr = "";
+  let b = true;
+  for (let i = name.length-1; i >= 0; i--) {
+    if (nums.includes(name[i]) && b) str = name[i]+str;
+    else {
+      wstr = name[i] + wstr;
+      b = false;
+    }
+  }
+  let nname = name;
+  if (str.length) nname = wstr+(Number(str)+1);
+  else nname += " 2";
+  
+  const nid = newfungus(nname);
+  
+  //Копирование свойств:
+  $("fungus_color"+nid).value = $("fungus_color"+id).value;
+  for (let i = 0; i < fungus_props_list.length; i++) {
+    const p = fungus_props_list[i];
+    switch (p.type) {
+      case "num": $("fungus_"+p.id+nid).value = $("fungus_"+p.id+id).value;
+      case "sel": $("fungus_"+p.id+nid).value = $("fungus_"+p.id+id).value;
+      case "chk": $("fungus_"+p.id+nid).checked = $("fungus_"+p.id+id).checked;
+    }
+  }
+}
+
 function add(id) { //Скрыть/показать дополнительные свойства растений
   if (plants_addprops[id]) {
     plants_addprops[id] = false;
@@ -414,6 +563,18 @@ function aadd(id) { //Скрыть/показать дополнительные
     animals_addprops[id] = true;
     $("animal_aopen"+id).src = "assets/up.svg";
     $show("animal_add"+id);
+  }
+}
+
+function fadd(id) { //Скрыть/показать дополнительные свойства грибов
+  if (funguses_addprops[id]) {
+    funguses_addprops[id] = false;
+    $("fungus_aopen"+id).src = "assets/down.svg";
+    $hide("animal_add"+id);
+  } else {
+    funguses_addprops[id] = true;
+    $("fungus_aopen"+id).src = "assets/up.svg";
+    $show("fungus_add"+id);
   }
 }
 
@@ -512,6 +673,7 @@ function readgame(json) { //Чтение JSON
     $("plant_hiddengraph"+i).checked = !p.hiddengraph;
     for (let j = 0; j < plants_props_list.length; j++) {
       const o = plants_props_list[j];
+      const v = p[o.id];
       switch (o.type) {
         case "num": $("plant_"+o.id+i).value = typeof v == "undefined" ? o.default:o.g(v); break;
         case "sel": $("plant_"+o.id+i).value = typeof v == "undefined" ? o.default:o.g(v); break;
