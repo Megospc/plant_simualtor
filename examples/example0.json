@@ -11,7 +11,7 @@
     "gsize": 15,
     "flycount": 100,
     "flych": 0.1,
-    "flymul": 0.01,
+    "flymul": 0.02,
     "flyspeed": 5,
     "flymax": 1000,
     "vibrate": true,
@@ -33,7 +33,7 @@
   },
   "plants": [
     {
-      "name": "растение 1",
+      "name": "растения 1",
       "color": "#00a000",
       "faze": 12,
       "consg": 1,
@@ -52,7 +52,7 @@
       "cleaner": 1
     },
     {
-      "name": "растение 2",
+      "name": "растения 2",
       "color": "#a00000",
       "faze": 12,
       "consg": 1,
@@ -68,7 +68,7 @@
       "boom": 0.5
     },
     {
-      "name": "растение 3",
+      "name": "растения 3",
       "color": "#0000a0",
       "faze": 12,
       "consg": 1,
@@ -84,7 +84,7 @@
       "nutrient": true
     },
     {
-      "name": "растение 4",
+      "name": "растения 4",
       "color": "#000000",
       "faze": 15,
       "consg": 1,
@@ -99,13 +99,13 @@
       "carn": 0.01,
       "czone": 60,
       "cadd": 10,
-      "toxic": 0.1,
+      "toxic": 0.01,
       "fvalue": 50,
       "mgzone": 100,
-      "mgpow": 3
+      "mgpow": 1
     },
     {
-      "name": "сон-трава",
+      "name": "сон-травы",
       "color": "#5000a0",
       "faze": 12,
       "consr": 1,
@@ -121,11 +121,29 @@
       "sleep": 1000,
       "sleprob": 0.01,
       "slezone": 100
+    },
+    {
+      "name": "паразиты",
+      "color": "#a00050",
+      "faze": 12,
+      "consr": 1,
+      "consg": 1,
+      "consb": 1,
+      "initial": 2,
+      "fruitsmin": 1,
+      "fruitsmax": 4,
+      "fzone": 40,
+      "ngrowmin": 2,
+      "ngrowmax": 50,
+      "fvalue": 30,
+      "parasite": 3,
+      "paprob": 0.01,
+      "pazone": 50
     }
   ],
   "animals": [
     {
-      "name": "животное 1",
+      "name": "животные 1",
       "color": "#a08000",
       "initial": 3,
       "change": 0.1,
@@ -138,6 +156,23 @@
       "clezone": 100,
       "cleprob": 0.1,
       "stomper": 0.5
+    },
+    {
+      "name": "животные 2",
+      "color": "#00a0a0",
+      "initial": 3,
+      "change": 0.1,
+      "speed": 5,
+      "prob": 0.2,
+      "zone": 40,
+      "hungry": 300,
+      "hunincr": 0.5,
+      "muln": 330,
+      "eggs": true,
+      "egrowmin": 100,
+      "egrowmax": 200,
+      "obscure": true,
+      "asleep": 0.5
     },
     {
       "name": "хищники",
@@ -153,6 +188,21 @@
       "clezone": 50,
       "cleprob": 0.1,
       "carn": true
+    }
+  ],
+  "funguses": [
+    {
+      "name": "гриб",
+      "color": "#502800",
+      "max": 420,
+      "initial": 1,
+      "consr": 0.03,
+      "consg": 0.03,
+      "consb": 0.03,
+      "grow": 0.5,
+      "mul": 0.005,
+      "ngrowmin": 100,
+      "ngrowmax": 200
     }
   ]
 }

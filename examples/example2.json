@@ -41,7 +41,8 @@
       "rtimemin": 2,
       "rtimemax": 40,
       "fvalue": 30,
-      "nutrient": true
+      "nutrient": true,
+      "hiddengraph": true
     }
   ],
   "animals": [
