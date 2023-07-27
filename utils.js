@@ -15,6 +15,8 @@ const rand = (min, max) => random(max-min)+min;
 //Округления:
 const floor = (x, d) => Math.floor(x*(10**d))/10**d; //Округление до d знака после запятой
 const flr = x => floor(x, 1)%1 ? floor(x, 1).toString():floor(x, 1)+".0"; //Округление до десятых (строка)
+const dfloor = (x, d) => Math.floor(x/d)*d; //Округление вниз до точности d
+const dceil = (x, d) => Math.ceil(x/d)*d; //Округление вверх до точности d
 
 //HEX:
 function hex(x) {
@@ -31,6 +33,7 @@ const r2d = x => x*180/PI; //Радианы в градусы
 const distance = (a, b) => Math.max(Math.abs(a.x-b.x), Math.abs(a.y-b.y)); //Метрика Минковского
 
 //Проверки:
+const prob = x => rnd() < x; //Проверка вероятности
 const zone = (a, b, zone) => distance(a, b) <= zone; //Проверка зоны
 
 function fullScreen(e) { //Метод полного экрана

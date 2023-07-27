@@ -1,4 +1,4 @@
-const version = "1.0.8";  //Версия программы
+const version = "1.1.19";  //Версия программы
 const options_list = [ //Список настроек
   { id: "size", type: "num", default: 28, check: [8, 50, true], label: "Размер поля: ", f: x => x, g: x => x },
   { id: "ggreen", type: "num", default: 250, check: [50, 10000, false], label: "Изначальный зелёный: ", f: x => x, g: x => x },
@@ -71,9 +71,14 @@ const animals_props_list = [ //Список свойств животных
   { id: "slehun", type: "num", default: 0, check: [0, 10, false], label: "Прожорливость во сне: ", add: true, f: x => x, g: x => x },
   { id: "gred", type: "num", default: 0, check: [0, 1000, false], label: "Разложение — красный: ", add: true, f: x => x, g: x => x },
   { id: "ggreen", type: "num", default: 0, check: [0, 1000, false], label: "Разложение — зелёный: ", add: true, f: x => x, g: x => x },
-  { id: "gblu3", type: "num", default: 0, check: [0, 1000, false], label: "Разложение — синий: ", add: true, f: x => x, g: x => x },
+  { id: "gblue", type: "num", default: 0, check: [0, 1000, false], label: "Разложение — синий: ", add: true, f: x => x, g: x => x },
+  { id: "protect", type: "num", default: 0, check: [0, 100, false], label: "Защита: ", add: true, f: x => x/100, g: x => x*100 },
+  { id: "asleep", type: "num", default: 0, check: [0, 100, false], label: "Антисон: ", add: true, f: x => x/100, g: x => x*100 },
+  { id: "egrowmin", type: "num", default: 100, check: [0, 1000, false], label: "Рост яйца (мин.): ", add: true, f: x => x, g: x => x },
+  { id: "egrowmax", type: "num", default: 200, check: [0, 1000, false], label: "Рост яйца (макс.): ", add: true, f: x => x+1, g: x => x-1 },
   { id: "big", type: "chk", default: false, label: "Большое", add: true, f: x => x, g: x => x },
   { id: "carn", type: "chk", default: false, label: "Хищное", add: true, f: x => x, g: x => x },
+  { id: "eggs", type: "chk", default: false, label: "Яйценос", add: true, f: x => x, g: x => x },
   { id: "obscure", type: "chk", default: false, label: "Незаметное", add: true, f: x => x, g: x => x }
 ];
 const funguses_props_list = [ //Список свойств грибов
@@ -657,7 +662,9 @@ function readgame(json) { //Чтение JSON
   log("Загрузка...");
   name = obj.name ?? "без названия";
   description = obj.description ?? "";
+  obj.plants ??= [];
   obj.animals ??= [];
+  obj.funguses ??= [];
   $('description').value = description;
   $('name').value = name;
   
@@ -699,6 +706,27 @@ function readgame(json) { //Чтение JSON
         case "num": $("animal_"+o.id+i).value = typeof v == "undefined" ? o.default:o.g(v); break;
         case "sel": $("animal_"+o.id+i).value = typeof v == "undefined" ? o.default:o.g(v); break;
         case "chk": $("animal_"+o.id+i).checked = typeof v == "undefined" ? o.default:o.g(v); break;
+      }
+    }
+  }
+  
+  //Расшифровка грибов:
+  $('funguses').innerHTML = "";
+  animali = 0;
+  animalsid = [];
+  for (let i = 0; i < obj.funguses.length; i++) {
+    const p = obj.funguses[i];
+    newfungus(p.name);
+    $("fungus_color"+i).value = p.color;
+    $("fungus_hiddenstat"+i).checked = !p.hiddenstat;
+    $("fungus_hiddengraph"+i).checked = !p.hiddengraph;
+    for (let j = 0; j < funguses_props_list.length; j++) {
+      const o = funguses_props_list[j];
+      const v = p[o.id];
+      switch (o.type) {
+        case "num": $("fungus_"+o.id+i).value = typeof v == "undefined" ? o.default:o.g(v); break;
+        case "sel": $("fungus_"+o.id+i).value = typeof v == "undefined" ? o.default:o.g(v); break;
+        case "chk": $("fungus_"+o.id+i).checked = typeof v == "undefined" ? o.default:o.g(v); break;
       }
     }
   }
@@ -753,6 +781,9 @@ window.onload = function() {
     smusictype(saved.musictype);
   }
   const open = sessionStorage.getItem("plant_simulator_open");
-  if (open) readgame(open);
+  if (open) {
+    readgame(open);
+    sessionStorage.setItem("plant_simulator_open", "");
+  }
   $show('editor');
 };
