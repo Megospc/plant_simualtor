@@ -29,9 +29,6 @@ function hex(x) {
 const d2r = x => x/180*PI; //Градусы в радианы
 const r2d = x => x*180/PI; //Радианы в градусы
 
-//Расчёты:
-const distance = (a, b) => Math.max(Math.abs(a.x-b.x), Math.abs(a.y-b.y)); //Метрика Минковского
-
 //Проверки:
 const prob = x => rnd() < x; //Проверка вероятности
 const zone = (a, b, zone) => distance(a, b) <= zone; //Проверка зоны

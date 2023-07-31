@@ -1,4 +1,4 @@
-const version = "1.1.19";  //Версия программы
+const version = "1.2.10";  //Версия программы
 const options_list = [ //Список настроек
   { id: "size", type: "num", default: 28, check: [8, 50, true], label: "Размер поля: ", f: x => x, g: x => x },
   { id: "ggreen", type: "num", default: 250, check: [50, 10000, false], label: "Изначальный зелёный: ", f: x => x, g: x => x },
@@ -11,6 +11,8 @@ const options_list = [ //Список настроек
   { id: "flycount", type: "num", default: 0, check: [0, 1000, true], label: "Количество мух: ", f: x => x, g: x => x },
   { id: "flymul", type: "num", default: 1, check: [0, 10, false], label: "Размножение мух: ", f: x => x/100, g: x => x*100 },
   { id: "flyspeed", type: "num", default: 5, check: [1, 10, false], label: "Скорость мух: ", f: x => x, g: x => x },
+  { id: "flyadd", type: "num", default: 0.005, check: [0, 10, false], label: "Добавка мух — вероятность: ", f: x => x/100, g: x => x*100 },
+  { id: "flyaddc", type: "num", default: 0, check: [0, 100, true], label: "Добавка мух — количество: ", f: x => x, g: x => x },
   { id: "cgreen", type: "num", default: 100, check: [0, 10000, false], label: "Добавка зелёного: ", f: x => x, g: x => x },
   { id: "cblue", type: "num", default: 100, check: [0, 10000, false], label: "Добавка синего: ", f: x => x, g: x => x },
   { id: "cred", type: "num", default: 100, check: [0, 10000, false], label: "Добавка красного: ", f: x => x, g: x => x },
@@ -76,6 +78,8 @@ const animals_props_list = [ //Список свойств животных
   { id: "asleep", type: "num", default: 0, check: [0, 100, false], label: "Антисон: ", add: true, f: x => x/100, g: x => x*100 },
   { id: "egrowmin", type: "num", default: 100, check: [0, 1000, false], label: "Рост яйца (мин.): ", add: true, f: x => x, g: x => x },
   { id: "egrowmax", type: "num", default: 200, check: [0, 1000, false], label: "Рост яйца (макс.): ", add: true, f: x => x+1, g: x => x-1 },
+  { id: "sayprob", type: "num", default: 50, check: [0, 100, false], label: "Переговоры — вероятность: ", add: true, f: x => x/100, g: x => x*100 },
+  { id: "say", type: "num", default: 0, check: [0, Infinity, true], label: "Переговоры — язык: ", add: true, f: x => x, g: x => x },
   { id: "big", type: "chk", default: false, label: "Большое", add: true, f: x => x, g: x => x },
   { id: "carn", type: "chk", default: false, label: "Хищное", add: true, f: x => x, g: x => x },
   { id: "eggs", type: "chk", default: false, label: "Яйценос", add: true, f: x => x, g: x => x },
@@ -92,6 +96,8 @@ const funguses_props_list = [ //Список свойств грибов
   { id: "ngrowmax", type: "num", default: 200, check: [0, 1000, false], label: "Рост гриба-плода (макс.): ", add: true, f: x => x+1, g: x => x-1 },
   { id: "protect", type: "num", default: 0, check: [0, 100, false], label: "Защита: ", add: true, f: x => x/100, g: x => x*100 },
   { id: "grow", type: "num", default: 0.5, check: [0, 5, false], label: "Скорость роста: ", add: true, f: x => x, g: x => x },
+  { id: "mycor", type: "num", default: 0, check: [0, 10, false], label: "Микориза — рост: ", add: true, f: x => x, g: x => x },
+  { id: "amycor", type: "num", default: 0.1, check: [0, 10, false], label: "Микориза — исключения", f: x => x, g: x => x },
   { id: "toxic", type: "num", default: 0, check: [0, 100, false], label: "Ядовитый: ", add: true, f: x => x/100, g: x => x*100 },
   { id: "big", type: "chk", default: false, label: "Большой", add: true, f: x => x, g: x => x }
 ];
@@ -509,13 +515,13 @@ function newfungus(name) { //Новый вид гриба
   return id;
 }
 
-function deletefungus(id) { //Удаление вида растения
+function deletefungus(id) { //Удаление вида гриба
   $("fungus"+id).remove(); //Удаление HTML
   
   //Поиск индефикатора в списке:
   for (let i = 0; i < fungusesid.length; i++) if (fungusesid[i] == id) fungusesid.splice(i, 1); //Удаление
 }
-function copyplant(id) { //Копирование вида растения
+function copyfungus(id) { //Копирование вида гриба
   //Получение нового имени:
   const name = $("fungus_name"+id).value;
   const nums = ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9"];
@@ -536,7 +542,7 @@ function copyplant(id) { //Копирование вида растения
   const nid = newfungus(nname);
   
   //Копирование свойств:
-  $("fungus_color"+nid).value = $("fungus_color"+id).value;
+  $("fungus_color"+nid).value = $("funguses_color"+id).value;
   for (let i = 0; i < fungus_props_list.length; i++) {
     const p = fungus_props_list[i];
     switch (p.type) {
@@ -655,10 +661,6 @@ function readgame(json) { //Чтение JSON
     log("Ошибка: style не существует.");
     return;
   }
-  if (!isObject(obj.plants)) {
-    log("Ошибка: plants не существует.");
-    return;
-  }
   log("Загрузка...");
   name = obj.name ?? "без названия";
   description = obj.description ?? "";
@@ -670,11 +672,12 @@ function readgame(json) { //Чтение JSON
   
   //Расшифровка растений:
   $('plants').innerHTML = "";
-  plantsi = 0;
+  planti = 0;
   plantsid = [];
   for (let i = 0; i < obj.plants.length; i++) {
     const p = obj.plants[i];
-    newplant(p.name);
+    //newplant(p.name);
+    console.log(newplant(p.name), i)
     $("plant_color"+i).value = p.color;
     $("plant_hiddenstat"+i).checked = !p.hiddenstat;
     $("plant_hiddengraph"+i).checked = !p.hiddengraph;
@@ -712,8 +715,8 @@ function readgame(json) { //Чтение JSON
   
   //Расшифровка грибов:
   $('funguses').innerHTML = "";
-  animali = 0;
-  animalsid = [];
+  fungusi = 0;
+  fungusesid = [];
   for (let i = 0; i < obj.funguses.length; i++) {
     const p = obj.funguses[i];
     newfungus(p.name);
