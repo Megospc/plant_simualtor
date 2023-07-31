@@ -172,7 +172,9 @@
       "egrowmin": 100,
       "egrowmax": 200,
       "obscure": true,
-      "asleep": 0.5
+      "asleep": 0.5,
+      "say": 1,
+      "sayprob": 0.2
     },
     {
       "name": "хищники",

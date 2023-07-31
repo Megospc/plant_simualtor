@@ -1,0 +1,89 @@
+{
+  "name": "переговоры",
+  "options": {
+    "ggreen": 250,
+    "gblue": 250,
+    "gred": 250,
+    "gigreen": 0.1,
+    "giblue": 0.1,
+    "gired": 0.1,
+    "size": 28,
+    "gsize": 15,
+    "vibrate": true,
+    "cgreen": 250,
+    "cblue": 250,
+    "cred": 250,
+    "btype": "thor",
+    "musictype": 0,
+    "music": true
+  },
+  "style": {
+    "size": 5,
+    "resolution": 1800,
+    "sort": true,
+    "ground": 35,
+    "funga": 32
+  },
+  "plants": [
+    {
+      "name": "растения",
+      "color": "#00a000",
+      "faze": 12,
+      "consg": 1,
+      "consb": 1,
+      "consr": 1,
+      "initial": 300,
+      "fruitsmin": 1,
+      "fruitsmax": 4,
+      "fzone": 210,
+      "ngrowmin": 2,
+      "ngrowmax": 40,
+      "repeat": 1,
+      "rtimemin": 2,
+      "rtimemax": 40,
+      "fvalue": 30,
+      "hiddengraph": true
+    }
+  ],
+  "animals": [
+    {
+      "name": "переговоры",
+      "color": "#a08000",
+      "initial": 3,
+      "change": 0.1,
+      "speed": 5,
+      "prob": 0.2,
+      "zone": 40,
+      "hungry": 300,
+      "hunincr": 0.5,
+      "muln": 600,
+      "say": 1,
+      "sayprob": 0.5
+    },
+    {
+      "name": "животное",
+      "color": "#008000",
+      "initial": 3,
+      "change": 0.1,
+      "speed": 5,
+      "prob": 0.2,
+      "zone": 40,
+      "hungry": 300,
+      "hunincr": 0.5,
+      "muln": 600
+    },
+    {
+      "name": "хищники",
+      "color": "#800000",
+      "initial": 2,
+      "change": 0.1,
+      "speed": 5,
+      "prob": 0.2,
+      "zone": 40,
+      "hungry": 300,
+      "hunincr": 0.5,
+      "muln": 600,
+      "carn": true
+    }
+  ]
+}
