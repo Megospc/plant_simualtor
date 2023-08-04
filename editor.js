@@ -1,4 +1,4 @@
-const version = "1.3.21";  //Версия программы
+const version = "1.3.22";  //Версия программы
 const options_list = [ //Список настроек
   { id: "size", type: "num", default: 28, check: [8, 50, true], label: "Размер поля: ", f: x => x, g: x => x },
   { id: "ggreen", type: "num", default: 250, check: [50, 10000, false], label: "Изначальный зелёный: ", f: x => x, g: x => x },
@@ -11,7 +11,7 @@ const options_list = [ //Список настроек
   { id: "flycount", type: "num", default: 0, check: [0, 1000, true], label: "Количество мух: ", f: x => x, g: x => x },
   { id: "flymul", type: "num", default: 1, check: [0, 10, false], label: "Размножение мух: ", f: x => x/100, g: x => x*100 },
   { id: "flyspeed", type: "num", default: 5, check: [1, 10, false], label: "Скорость мух: ", f: x => x, g: x => x },
-  { id: "flyadd", type: "num", default: 0.005, check: [0, 10, false], label: "Добавка мух — вероятность: ", f: x => x/100, g: x => x*100 },
+  { id: "flyadd", type: "num", default: 0.5, check: [0, 10, false], label: "Добавка мух — вероятность: ", f: x => x/100, g: x => x*100 },
   { id: "flyaddc", type: "num", default: 0, check: [0, 100, true], label: "Добавка мух — количество: ", f: x => x, g: x => x },
   { id: "cgreen", type: "num", default: 100, check: [0, 10000, false], label: "Добавка зелёного: ", f: x => x, g: x => x },
   { id: "cblue", type: "num", default: 100, check: [0, 10000, false], label: "Добавка синего: ", f: x => x, g: x => x },
@@ -42,7 +42,7 @@ const plants_props_list = [ //Список свойств растений
   { id: "czone", type: "num", default: 50, check: [0, 2500, false], label: "Хищное — зона: ", add: true, f: x => x, g: x => x },
   { id: "cadd", type: "num", default: 10, check: [0, 500, true], label: "Хищное — ценность: ", add: true, f: x => x, g: x => x },
   { id: "boom", type: "num", default: 0, check: [0, 100, false], label: "Взрывное: ", add: true, f: x => x/100, g: x => x*100 },
-  { id: "add", type: "num", default: 1, check: [0, 5, false], label: "Скорость роста: ", add: true, f: x => x, g: x => x },
+  { id: "grow", type: "num", default: 1, check: [0, 5, false], label: "Скорость роста: ", add: true, f: x => x, g: x => x },
   { id: "fvalue", type: "num", default: 10, check: [0, 1000, false], label: "Питательность: ", add: true, f: x => x, g: x => x },
   { id: "toxic", type: "num", default: 0, check: [0, 100, false], label: "Ядовитое: ", add: true, f: x => x/100, g: x => x*100 },
   { id: "mgzone", type: "num", default: 100, check: [0, 2500, false], label: "Приманка — зона: ", add: true, f: x => x, g: x => x },
@@ -693,8 +693,7 @@ function readgame(json) { //Чтение JSON
   plantsid = [];
   for (let i = 0; i < obj.plants.length; i++) {
     const p = obj.plants[i];
-    //newplant(p.name);
-    console.log(newplant(p.name), i)
+    newplant(p.name);
     $("plant_color"+i).value = p.color;
     $("plant_hiddenstat"+i).checked = !p.hiddenstat;
     $("plant_hiddengraph"+i).checked = !p.hiddengraph;
