@@ -19,7 +19,7 @@ const options_list = [ //Список настроек
   { id: "btype", type: "sel", cases: () => ["зацикленные", "зеркальные", "обычные"], label: "Тип бортиков: ", f: x => ["thor", "bounce", "lemit"][x], g: x => ["thor", "bounce", "lemit"].indexOf(x) },
   { id: "fireprob", type: "num", default: 0.5, check: [0, 100, false], label: "Пожар — вероятность: ", f: x => x/100, g: x => x*100 },
   { id: "firezone", type: "num", default: 30, check: [0, 25000, false], label: "Пожар — зона: ", f: x => x, g: x => x },
-  { id: "firetime", type: "num", default: 0.5, check: [0, 20, false], label: "Пожар — длительность: ", f: x => x, g: x => x }
+  { id: "firetime", type: "num", default: 0.5, check: [0, 20, false], label: "Пожар — длительность: ", f: x => x*1000, g: x => x/1000 }
 ];
 const plants_props_list = [ //Список свойств растений
   { id: "faze", type: "num", default: 12, check: [1, 500, true], label: "Длина фазы: ", f: x => x, g: x => x },
