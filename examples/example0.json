@@ -14,13 +14,18 @@
     "flymul": 0.02,
     "flyspeed": 5,
     "flymax": 1000,
+    "flyadd": 0.005,
+    "flyaddc": 10,
     "vibrate": true,
     "cgreen": 250,
     "cblue": 250,
     "cred": 250,
     "btype": "thor",
     "musictype": 0,
-    "music": true
+    "music": true,
+    "fireprob": 0.005,
+    "firezone": 30,
+    "firetime": 500
   },
   "style": {
     "size": 5,
@@ -29,6 +34,11 @@
     "flysize": 3,
     "flyanim": 10,
     "flycolor": "#00000080",
+    "firecolor": "#a03000",
+    "fireanimmin": 56,
+    "fireanimmax": 200,
+    "fireanimc": 0.3,
+    "fireanimr": 5,
     "ground": 35
   },
   "plants": [
@@ -102,7 +112,8 @@
       "toxic": 0.01,
       "fvalue": 50,
       "mgzone": 100,
-      "mgpow": 1
+      "mgpow": 1,
+      "fire": 0.0005
     },
     {
       "name": "сон-травы",
@@ -121,6 +132,24 @@
       "sleep": 1000,
       "sleprob": 0.01,
       "slezone": 100
+    },
+    {
+      "name": "лианы",
+      "color": "#008020",
+      "faze": 12,
+      "consr": 1,
+      "consg": 1,
+      "consb": 1,
+      "initial": 20,
+      "fruitsmin": 1,
+      "fruitsmax": 4,
+      "fzone": 40,
+      "ngrowmin": 2,
+      "ngrowmax": 50,
+      "fvalue": 80,
+      "creeprob": 0.2,
+      "creezone": 50,
+      "creeper": 1
     },
     {
       "name": "паразиты",
@@ -146,12 +175,12 @@
       "name": "животные 1",
       "color": "#a08000",
       "initial": 3,
-      "change": 0.1,
+      "change": 0.01,
       "speed": 5,
       "prob": 0.02,
       "zone": 40,
       "hungry": 300,
-      "hunincr": 0.5,
+      "hinc": 0.5,
       "muln": 600,
       "clezone": 100,
       "cleprob": 0.1,
@@ -161,12 +190,12 @@
       "name": "животные 2",
       "color": "#00a0a0",
       "initial": 3,
-      "change": 0.1,
+      "change": 0.01,
       "speed": 5,
       "prob": 0.2,
       "zone": 40,
       "hungry": 300,
-      "hunincr": 0.5,
+      "hinc": 0.5,
       "muln": 330,
       "eggs": true,
       "egrowmin": 100,
@@ -174,7 +203,8 @@
       "obscure": true,
       "asleep": 0.5,
       "say": 1,
-      "sayprob": 0.2
+      "sayprob": 0.2,
+      "fvalue": 50
     },
     {
       "name": "хищники",
@@ -185,7 +215,7 @@
       "prob": 0.02,
       "zone": 40,
       "hungry": 300,
-      "hunincr": 0.5,
+      "hinc": 0.5,
       "muln": 600,
       "clezone": 50,
       "cleprob": 0.1,
@@ -204,7 +234,9 @@
       "grow": 0.5,
       "mul": 0.005,
       "ngrowmin": 100,
-      "ngrowmax": 200
+      "ngrowmax": 200,
+      "mycor": 1,
+      "amycor": 0.1
     }
   ]
 }
