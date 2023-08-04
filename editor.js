@@ -1,4 +1,4 @@
-const version = "1.3.20";  //Версия программы
+const version = "1.3.21";  //Версия программы
 const options_list = [ //Список настроек
   { id: "size", type: "num", default: 28, check: [8, 50, true], label: "Размер поля: ", f: x => x, g: x => x },
   { id: "ggreen", type: "num", default: 250, check: [50, 10000, false], label: "Изначальный зелёный: ", f: x => x, g: x => x },
@@ -151,6 +151,7 @@ function json() { //Функция создания JSON симуляции
     fireanimmax: 200,
     fireanimc: 0.3,
     fireanimr: 5,
+    firecolor: "#a03000",
     ground: 35,
     graphmove: graphmove,
     biggraph: biggraph
