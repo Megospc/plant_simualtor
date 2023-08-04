@@ -1,4 +1,5 @@
 //////////////////////////////////////////////////////////
+/////                                                /////
 /////               СИМУЛЯТОР РАСТЕНИЙ               /////
 /////                                                /////
 /////                 ######   ######                /////
@@ -15,10 +16,11 @@
 /////                       ##                       /////
 /////                      ##                        /////
 /////                                                /////
-////                     MEGOSPC                     /////
+/////                    MEGOSPC                     /////
+/////                                                /////
 //////////////////////////////////////////////////////////
 
-const version = "1.2.10"; //Версия программы
+const version = "1.3.19"; //Версия программы
 const fps = 30; //Количество кадров в секунду
 const fpsTime = 1000/fps; //Миллисекунд на кадр
 const font = "Monospace"; //Шрифт текста
@@ -47,7 +49,10 @@ const defaultJSON = `{
     "cred": 250,
     "btype": "thor",
     "musictype": 0,
-    "music": true
+    "music": true,
+    "fireprob": 0.005,
+    "firezone": 30,
+    "firetime": 500
   },
   "style": {
     "size": 5,
@@ -56,6 +61,11 @@ const defaultJSON = `{
     "flysize": 3,
     "flyanim": 10,
     "flycolor": "#00000080",
+    "firecolor": "#a03000",
+    "fireanimmin": 56,
+    "fireanimmax": 200,
+    "fireanimc": 0.3,
+    "fireanimr": 5,
     "ground": 35
   },
   "plants": [
@@ -129,7 +139,8 @@ const defaultJSON = `{
       "toxic": 0.01,
       "fvalue": 50,
       "mgzone": 100,
-      "mgpow": 1
+      "mgpow": 1,
+      "fire": 0.0005
     },
     {
       "name": "сон-травы",
@@ -148,6 +159,24 @@ const defaultJSON = `{
       "sleep": 1000,
       "sleprob": 0.01,
       "slezone": 100
+    },
+    {
+      "name": "лианы",
+      "color": "#008020",
+      "faze": 12,
+      "consr": 1,
+      "consg": 1,
+      "consb": 1,
+      "initial": 20,
+      "fruitsmin": 1,
+      "fruitsmax": 4,
+      "fzone": 40,
+      "ngrowmin": 2,
+      "ngrowmax": 50,
+      "fvalue": 80,
+      "creeprob": 0.2,
+      "creezone": 50,
+      "creeper": 1
     },
     {
       "name": "паразиты",
@@ -173,12 +202,12 @@ const defaultJSON = `{
       "name": "животные 1",
       "color": "#a08000",
       "initial": 3,
-      "change": 0.1,
+      "change": 0.01,
       "speed": 5,
       "prob": 0.02,
       "zone": 40,
       "hungry": 300,
-      "hunincr": 0.5,
+      "hinc": 0.5,
       "muln": 600,
       "clezone": 100,
       "cleprob": 0.1,
@@ -188,12 +217,12 @@ const defaultJSON = `{
       "name": "животные 2",
       "color": "#00a0a0",
       "initial": 3,
-      "change": 0.1,
+      "change": 0.01,
       "speed": 5,
       "prob": 0.2,
       "zone": 40,
       "hungry": 300,
-      "hunincr": 0.5,
+      "hinc": 0.5,
       "muln": 330,
       "eggs": true,
       "egrowmin": 100,
@@ -213,7 +242,7 @@ const defaultJSON = `{
       "prob": 0.02,
       "zone": 40,
       "hungry": 300,
-      "hunincr": 0.5,
+      "hinc": 0.5,
       "muln": 600,
       "clezone": 50,
       "cleprob": 0.1,
@@ -264,6 +293,8 @@ var interval; //Интервал функции кадра
 var pause; //Симуляция на паузе?
 var cprops; //Характеристики холста
 var counters; //Счётчики
+var time; //Счётчик реального времени
+var stime; //Время старта
 const S = x => x*cscale; //Функция масштабирования холста
 const theme = {
   back: "#ffffff",
@@ -336,7 +367,8 @@ function sort(id) { //Метод сортировки статистики
   fill(plants, "plants");
   fill(animals, "animals");
   fill(funguses, "funguses");
-  if (options.flycount) sorted.push({ state: { color: style.flycolor, name: "мухи" }, counter: { count: counters.fly.count, history: counters.fly.history }, type: "fly" }); //Добавление мух
+  if (counters.fly.history) sorted.push({ state: { color: style.flycolor, name: "мухи" }, counter: { count: counters.fly.count, history: counters.fly.history }, type: "fly" }); //Добавление мух
+  if (counters.fire.history) sorted.push({ state: { color: style.firecolor, name: "пожар" }, counter: { count: counters.fire.count, history: counters.fire.history }, type: "fly" }); //Добавление огня
   
   if (style.sort) { //Сортировка
     for (let j = 0; j < sorted.length-1; j++) {
@@ -363,20 +395,20 @@ function graph(size, x, y) { //Отрисовка графиков
   const fsize = style.graphmove ? (frame < width ? frame:width):frame; //Ширина в кадрах
   const tsize = fsize*fpsTime; //Ширина в миллисекундах
   const arr = plants.concat(animals).concat(funguses); //Массив видов
-  const countof = (c, i) => {
-    if (i < plants.length) return c.plants[i].count;
+  const countof = (j, i) => {
+    if (i < plants.length) return stats.plants[i][j];
     else {
       i -= plants.length;
-      if (i < animals.length) return c.animals[i].count;
-      else return c.funguses[i-animals.length].count;
+      if (i < animals.length) return stats.animals[i][j];
+      else return stats.funguses[i-animals.length][j];
     }
   }; //Функция количества
   
   //Поиск максимального значения:
   let max = 2; //Максимальное значение
-  for (let j = start; j < start+fsize; j++) { //Проверка всех кадров графика
+  for (let j = 0; j < width; j++) { //Проверка всех отображаемых кадров графика
     for (let i = 0; i < arr.length; i++) { //Проверка всех состояний
-      const c = countof(stats[j], i);
+      const c = countof(Math.floor(j/width*fsize)+start, i);
       const s = arr[i];
       if (!s.hiddengraph) if (c > max) max = c; //Если не указанно "не отображать на графике"
     }
@@ -437,7 +469,7 @@ function graph(size, x, y) { //Отрисовка графиков
         ctx.beginPath();
         for (let k = 0; k < width; k++) { //Отрисовка линни вида
           const j = Math.floor(k/width*fsize)+start;
-          const v = height/8*7-countof(stats[j], i)/max*height/8*6+y;
+          const v = height/8*7-countof(j, i)/max*height/8*6+y;
           if (x == 0) ctx.moveTo(S(x+k+size/8), S(v));
           else ctx.lineTo(S(x+k+size/8), S(v));
         }
@@ -536,6 +568,9 @@ function forall(obj, types, g, nav) { //Метод проверки объект
       case "fly":
         if (f(p, o)) return;
         break;
+      case "fire":
+        if (f(p, o)) return;
+        break;
       case "animal":
         if (f(p, o, animals[o.state])) return;
         break;
@@ -587,12 +622,14 @@ class Ground { //Класс земли
       return false; //Получение не удалось
     }
   }
-  incr() { //Метод восстановления минералов
+  
+  handler() { //Метод обработчика
+    //Восстановление минералов:
     this.r += options.gired ?? 0;
     this.g += options.gigreen ?? 0;
     this.b += options.giblue ?? 0;
   }
-  add(r, g, b) { //Добавка минералов
+  add(r, g, b) { //Метод добавки минералов
     this.r += r;
     this.g += g;
     this.b += b;
@@ -606,6 +643,61 @@ class Ground { //Класс земли
     this.r += options.cred;
     this.g += options.cgreen;
     this.b += options.cblue;
+  }
+}
+
+class Fire { //Класс огня
+  constructor(x, y) {
+    //Усатновка координат:
+    this.x = x;
+    this.y = y;
+    
+    this.time = timeNow(); //Время появления
+    this.anim = { now: 128, next: rand(style.fireanimmin, style.fireanimmax) }; //Анимация
+    
+    this.id = register(this, "fire"); //Регистрация огня
+    
+    //Обновлление счётчиков:
+    counters.fire.count++;
+    counters.fire.history++;
+  }
+  dead() {
+    deregister(this.id); //Дерегистрация огня
+    counters.fire.count--; //Обновление счётчика
+  }
+  handler() {
+    forall(this, ["plant", "animal", "egg", "fly", "mushroom"], function(p, o, s) { //Возгорание
+      if (zone(o, this, options.firezone)) if (prob(options.fireprob)) { //Если растение в зоне и вероятность сбылась
+        if (p.type == "plant" || p.type == "animal" || p.type == "egg") if (prob(s.afire)) return; //Если защита объекта сработала — пропустить
+        if (p.type == "plant") new Fire(o.x, o.y); //Если это растение — появление огня
+        o.dead(); //Объект сгорает
+      }
+    });
+    if (timeNow() > this.time+(options.firetime ?? 1000)) this.dead(); //Тушение со временем
+  }
+  render() {
+    function fig(size) {
+      const s = style.size*size;
+      ctx.beginPath();
+      ctx.moveTo(S(this.x*scale+15), S((this.y-s/2)*scale+15));
+      ctx.lineTo(S((this.x+s/2)*scale+15), S(this.y*scale+15));
+      ctx.lineTo(S((this.x+s/4)*scale+15), S((this.y+s/2)*scale+15));
+      ctx.lineTo(S((this.x-s/4)*scale+15), S((this.y+s/2)*scale+15));
+      ctx.lineTo(S((this.x-s/2)*scale+15), S(this.y*scale+15));
+      ctx.closePath();
+      ctx.fill();
+    }
+    ctx.fillStyle = style.firecolor;
+    fig.call(this, 1);
+    
+    if (anim > 1) { //Отрисовка анимации
+      ctx.fillStyle = style.firecolor+hex(this.anim.now);
+      fig.call(this, anim);
+      
+      //Изменение альфа-канала:
+      this.anim.now = this.anim.now+(this.anim.next-this.anim.now)*style.fireanimc;
+      if (frame%style.fireanimr == 0) this.anim.next = rand(style.fireanimmin, style.fireanimmax);
+    }
   }
 }
 
@@ -657,7 +749,7 @@ class Fly { //Класс мух
   }
 }
 
-class Egg {
+class Egg { //Класс яиц
   constructor(state, x, y) {
     this.state = state; //Вид яйца
     this.grow = 0; //Рост яйца
@@ -687,7 +779,7 @@ class Egg {
     }
   }
   render() { //Метод отрисовки
-    const state = animals[this.state]; //Вид животного
+  const state = animals[this.state]; //Вид яйца
     function fig(size) {
       const s = style.size*size;
       ctx.beginPath();
@@ -744,8 +836,10 @@ class Animal { //Класс животных
         const max = Math.max(Math.abs(dx), Math.abs(dy)); //Максимальная разница
         
         //Установка скорости:
-        o.speed.x = -dx/max*random(s.speed);
-        o.speed.y = -dy/max*random(s.speed);
+        const v = random(s.speed); //Скорость
+        o.speed.x = dx/max*v;
+        o.speed.y = dy/max*v;
+        
         o.anim(100);
       }
     });
@@ -781,8 +875,10 @@ class Animal { //Класс животных
           const max = Math.max(Math.abs(dx), Math.abs(dy)); //Максимальная разница
           
           //Установка скорости:
-          o.speed.x = dx/max*random(s.speed);
-          o.speed.y = dy/max*random(s.speed);
+          const v = random(s.speed); //Скорость
+          o.speed.x = dx/max*v;
+          o.speed.y = dy/max*v;
+          
           o.anim(100);
         }
       });
@@ -793,6 +889,11 @@ class Animal { //Класс животных
     //Движение:
     this.x = testCord(this.x+this.speed.x, style.size);
     this.y = testCord(this.y+this.speed.y, style.size);
+    
+    if (state.sleprob && state.sleep && state.slezone) forall(this, ["animal"], function(p, o, s) { //Свойство "Гипноз"
+      if (o.state == this.state) return; //Если животное того же вида — пропустить
+      if (zone(o, this, state.slezone)) if (prob(state.sleprob)) o.tosleep(state.sleep); //Если животное в зоне и вероятность сбылась, оно засыпает
+    });
     
     if (state.carn) { //Свойство "Хищное"
       if (state.prob && state.zone) forall(this, ["animal", "plant"], function(p, o, s) { //Атака
@@ -828,8 +929,9 @@ class Animal { //Класс животных
           const max = Math.max(Math.abs(dx), Math.abs(dy)); //Максимальная разница
           
           //Установка скорости:
-          this.speed.x = dx/max*random(state.speed);
-          this.speed.y = dy/max*random(state.speed);
+          const v = random(state.speed); //Скорость
+          this.speed.x = dx/max*v;
+          this.speed.y = dy/max*v;
         }
       });
     } else {
@@ -860,13 +962,14 @@ class Animal { //Класс животных
           const max = Math.max(Math.abs(dx), Math.abs(dy)); //Максимальная разница
           
           //Установка скорости:
-          this.speed.x = dx/max*random(state.speed);
-          this.speed.y = dy/max*random(state.speed);
+          const v = random(state.speed); //Скорость
+          this.speed.x = dx/max*v;
+          this.speed.y = dy/max*v;
         }
       });
     }
     
-    this.hungry -= state.hunincr ?? 1; //Трата очков сытости
+    this.hungry -= state.hinc ?? 1; //Трата очков сытости
     if (this.hungry < 0) this.dead(true); //Смерть от голода
   }
   render() { //Метод отрисовки
@@ -874,17 +977,17 @@ class Animal { //Класс животных
     function fig(size) {
       const s = style.size*size;
       ctx.beginPath();
-      ctx.moveTo(S((this.x)*scale+15), S((this.y-s/2)*scale+15));
-      ctx.lineTo(S((this.x+s/2)*scale+15), S((this.y)*scale+15));
-      ctx.lineTo(S((this.x)*scale+15), S((this.y+s/2)*scale+15));
-      ctx.lineTo(S((this.x-s/2)*scale+15), S((this.y)*scale+15));
+      ctx.moveTo(S(this.x*scale+15), S((this.y-s/2)*scale+15));
+      ctx.lineTo(S((this.x+s/2)*scale+15), S(this.y*scale+15));
+      ctx.lineTo(S(this.x*scale+15), S((this.y+s/2)*scale+15));
+      ctx.lineTo(S((this.x-s/2)*scale+15), S(this.y*scale+15));
       ctx.closePath();
       ctx.fill();
     }
     ctx.fillStyle = state.color;
     fig.call(this, 1);
     
-    if (anim && this.alen && this.atime+this.alen > timeNow()) { //Отрисовка анимаций
+    if (anim > 1 && this.alen && this.atime+this.alen > timeNow()) { //Отрисовка анимаций
       const a = 128-(timeNow()-this.atime)/this.alen*128; //Непрозрачность
       ctx.fillStyle = state.color+hex(a);
       fig.call(this, anim);
@@ -925,7 +1028,7 @@ class Mushroom { //Класс грибов-плодов
   init() { //Метод инициализации
     const state = funguses[this.state]; //Вид гриба
     counters.funguses[this.state].fruits++; //Обновление счётчика
-    this.ngrow = rand(state.ngrowmin, state.ngrowmax); //Время роста
+    this.ngrow = Math.floor(rand(state.ngrowmin, state.ngrowmax)); //Время роста
     
     this.id = register(this, "mushroom"); //Регистрация гриба
   }
@@ -1060,7 +1163,8 @@ class Plant { //Класс растений
   }
   init() { //Метод инициализации
     const state = plants[this.state]; //Вид растения
-    this.ngrow = rand(state.ngrowmin, state.ngrowmax); //Время роста семени
+    this.ngrow = Math.floor(rand(state.ngrowmin, state.ngrowmax)); //Время роста семени
+    
     //Обновление счётчиков:
     counters.plants[this.state].count++;
     counters.plants[this.state].history++;
@@ -1143,6 +1247,23 @@ class Plant { //Класс растений
       if (o.state == this.state) return; //Если растение того же вида — пропустить
       if (zone(o, this, state.azone)) if (prob(state.attack)) o.dead(); //Если растение в зоне атаки и вероятность сбылась, оно погибает
     });
+    
+    if (state.creeprob && state.creeper) { //Свойство "Лиана"
+      let c = 0; //Количество растений в зоне
+      forall(this, ["plant"], function(p, o, s) { //Подсчёт растений в зоне
+        if (s.creeprob && s.creeper) return; //Если это лиана — пропустить
+        if (zone(o, this, state.creezone)) c++; //Обновление счётчика
+      });
+      if (c < state.creeper && prob(state.creeprob)) { //Если растений недостаточно и вероятность сбылась
+        this.dead(); //Смерть
+        return;
+      }
+    }
+    
+    if (prob(state.fire ?? 0)) { //Свойство "Возгорание"
+      new Fire(this.x, this.y); //Новый огонь
+      this.dead(); //Растение сгорает
+    }
   }
   render() { //Метод отрисовки
     const state = plants[this.state]; //Вид растения
@@ -1196,7 +1317,7 @@ class Plant { //Класс растений
     ctx.fillStyle = state.color;
     fig.call(this, 1);
     
-    if (anim && this.alen && this.atime+this.alen > timeNow()) { //Отрисовка анимаций
+    if (anim > 1 && this.alen && this.atime+this.alen > timeNow()) { //Отрисовка анимаций
       const a = 128-(timeNow()-this.atime)/this.alen*128; //Непрозрачность
       ctx.fillStyle = state.color+hex(a);
       fig.call(this, anim);
@@ -1221,13 +1342,20 @@ class Plant { //Класс растений
 function start() { //Метод инициализации
   frame = 0; //Сброс счётчика
   lastFrame = performance.now(); //Сброс последнего кадра
+  time = 0; //Сброс реального времени
+  stime = performance.now(); //Сохранение текущего времени
   const fsize = options.size*options.gsize; //Полный размер поля
   scale = 420/fsize; //Установка масштаба
-  stats = []; //Очистка сохранённой статистики
+  stats = {
+    plants: [],
+    animals: [],
+    funguses: []
+  }; //Очистка сохранённой статистики
   arr = []; //Очистка массива объектов
   pause = false; //Не пауза
   counters = { //Устновка счётчиков
     fly: { count: 0, history: 0 },
+    fire: { count: 0, history: 0 },
     plants: [],
     animals: [],
     funguses: []
@@ -1244,6 +1372,7 @@ function start() { //Метод инициализации
   for (let j = 0; j < plants.length; j++) { //Для каждого состояния
     const state = plants[j];
     counters.plants[j] = { count: 0, history: 0 }; //Счётчик популяции
+    stats.plants[j] = []; //Сохранённая статистика
     for (let i = 0; i < state.initial; i++) new Plant(j); //Создание растений
   }
   
@@ -1251,6 +1380,7 @@ function start() { //Метод инициализации
   for (let j = 0; j < animals.length; j++) { //Для каждого состояния
     const state = animals[j];
     counters.animals[j] = { count: 0, eggs: 0, history: 0 }; //Счётчик популяции
+    stats.animals[j] = []; //Сохранённая статистика
     for (let i = 0; i < state.initial; i++) new Animal(j); //Создание животных
   }
   
@@ -1258,19 +1388,29 @@ function start() { //Метод инициализации
   for (let j = 0; j < funguses.length; j++) { //Для каждого состояния
     const state = funguses[j];
     counters.funguses[j] = { count: 0, fruits: 0, history: 0 }; //Счётчик популяции
+    stats.funguses[j] = []; //Сохранённая статистика
     for (let i = 0; i < state.initial; i++) new Mycelium(j); //Создание грибниц
   }
   
-  for (let i = 0; i < options.flycount; i++) new Fly(); //Инициализация мух
+  for (let i = 0; i < (options.flycount ?? 0); i++) new Fly(); //Инициализация мух
   
   sort(); //Сортировка
   
+  frame++; //Прибавление кадра
   interval = setInterval(frame_, fpsTime/(options.showspeed ?? 1)); //Установка интервала
 }
 
 function frame_() { //Метод кадра
   const FPS = 1000/(performance.now()-lastFrame); //Текущее количество кадров в секунду
   lastFrame = performance.now(); //Установка последнего кадра
+  
+  //Расчёт реального времени:
+  if (pause) {
+    if (stime !== false) { //Остановка реального времени
+      time += performance.now()-stime;
+      stime = false;
+    }
+  } else if (stime === false) stime = performance.now(); //Возобновление реального времени
   
   if (astats) { //Расширенные настройки
     if (arendered == astats) return; //Если уже отрисованно — пропустить
@@ -1282,7 +1422,7 @@ function frame_() { //Метод кадра
     ctx.lineTo(S(45), S(50));
     ctx.closePath();
     ctx.fill();
-    if (astats < 4) {
+    if (astats < 5) {
       ctx.beginPath();
       ctx.moveTo(S(855), S(20));
       ctx.lineTo(S(880), S(35));
@@ -1300,7 +1440,7 @@ function frame_() { //Метод кадра
           ctx.textAlign = "left";
           sort();
           let sum = 0; //Сумма популяций
-          const size = Math.min(300/sorted.length, 18); //Размер шрифта
+          const size = Math.min(200/sorted.length, 18); //Размер шрифта
           ctx.font = S(size)+"px "+font;
           for (let i = 0; i < sorted.length; i++) {
             const p = sorted[i];
@@ -1342,7 +1482,7 @@ function frame_() { //Метод кадра
           ctx.textAlign = "left";
           sort("history");
           let sum = 0; //Сумма популяций
-          const size = Math.min(300/sorted.length, 18); //Размер шрифта
+          const size = Math.min(200/sorted.length, 18); //Размер шрифта
           ctx.font = S(size)+"px "+font;
           for (let i = 0; i < sorted.length; i++) {
             const p = sorted[i];
@@ -1436,24 +1576,45 @@ function frame_() { //Метод кадра
           }
         }
         break;
+      case 5:
+        {
+          ctx.fillStyle = "#000000";
+          ctx.textAlign = "center";
+          ctx.font = S(24)+"px "+font;
+          ctx.fillText("Служебная информация:", S(450), S(30));
+          ctx.textAlign = "left";
+          ctx.font = S(18)+"px "+font;
+          ctx.fillText("Название симуляции: "+obj.name, S(20), S(80), S(860));
+          ctx.fillText("Номер кадра: "+frame, S(20), S(110), S(860));
+          ctx.fillText("Игровое время: "+floor(timeNow()/1000, 3)+"с", S(20), S(140), S(860));
+          ctx.fillText("Реальное время: "+floor(time/1000, 3)+"с", S(20), S(170), S(860));
+          ctx.fillText("Средний расчёт: "+floor(time/frame, 2)+"мс", S(20), S(200), S(860));
+          ctx.fillText("Количество ячеек: "+arr.length, S(20), S(230), S(860));
+        }
+        break;
     }
     arendered = astats;
+    
+    //Кнопка "Скриншот":
+    ctx.fillStyle = theme.elements;
+    ctx.fillRect(S(850), S(405), S(30), S(20));
+    ctx.fillRect(S(870), S(400), S(5), S(5));
+    ctx.fillStyle = theme.back;
+    ctx.fillRect(S(860), S(410), S(10), S(10));
+    ctx.fillStyle = theme.elements;
+    ctx.fillRect(S(863), S(413), S(4), S(4));
     return;
   }
   
   if (!pause) {
-    //Расчёт суммарной популяции:
-    let sum = 0;
-    for (let i = 0; i < sorted.length; i++) sum += sorted[i].counter.count;
-    
     //Сохранение популяций:
-    const counts = structuredClone(counters);
-    counts.sum = sum;
-    stats.push(counts);
+    for (let i = 0; i < plants.length; i++) stats.plants[i].push(counters.plants[i].count);
+    for (let i = 0; i < animals.length; i++) stats.animals[i].push(counters.animals[i].count);
+    for (let i = 0; i < funguses.length; i++) stats.funguses[i].push(counters.funguses[i].count);
     
     if (prob(options.flyadd)) for (let i = 0; i < (options.flyaddc ?? 1) && counters.fly.count < options.flymax; i++) new Fly(); //Добавка мух
     for (let i = 0; i < arr.length; i++) if (arr[i].avail) arr[i].obj.handler(); //Обработка объектов
-    for (let x = 0; x < options.size; x++) for (let y = 0; y < options.size; y++) ground[x][y].incr(); //Восстановление минералов
+    for (let x = 0; x < options.size; x++) for (let y = 0; y < options.size; y++) ground[x][y].handler(); //Обработка земли
   }
   
   while (arr.length && !arr[arr.length-1].avail) arr.pop(); //Очистка массива
@@ -1499,9 +1660,9 @@ function frame_() { //Метод кадра
     ctx.fillText(sum + " | сумма", S(490), S(style.biggraph ? 350:150));
     
     //Отрисовка мини-статистики:
-    ctx.fillText("Время: "+flr(timeNow()/1000)+"с", S(490), S(style.biggraph ? 260:30)); //Игровое время
-    ctx.fillText("FPS: "+flr(FPS)+" x"+(options.showspeed ?? 1), S(490), S(style.biggraph ? 290:60)); //Текущее количество кадров в секунду
-    ctx.fillText(`Расчёт: ${Math.floor(performance.now()-lastFrame)}мс`, S(490), S(style.biggraph ? 320:90)); //Время на расчёт кадра
+    ctx.fillText("Время: "+flr(timeNow()/1000)+"с", S(490), S(style.biggraph ? 260:30), S(style.biggraph ? 400:180)); //Игровое время
+    ctx.fillText("FPS: "+flr(FPS)+" x"+(options.showspeed ?? 1), S(490), S(style.biggraph ? 290:60), S(style.biggraph ? 400:180)); //Текущее количество кадров в секунду
+    ctx.fillText("Расчёт: "+Math.floor(performance.now()-lastFrame)+"мс", S(490), S(style.biggraph ? 320:90), S(style.biggraph ? 400:180)); //Время на расчёт кадра
   }
   
   if (pause) { //Отрисовка меню возможностей
@@ -1566,7 +1727,7 @@ function frame_() { //Метод кадра
     //Кнопка "Статистика":
     ctx.beginPath();
     ctx.moveTo(S(695), S(415));
-    ctx.arc(S(695), S(415), S(12), d2r(70), d2r(0));
+    ctx.arc(S(695), S(415), S(12), d2r(0), d2r(300));
     ctx.fill();
   } else {
     //Кнопка "Пауза":
@@ -1594,16 +1755,39 @@ function click(e) { //Обработчик кликов
   const x = (e.pageX-cprops.left)/cprops.width*900;
   const y = (e.pageY-cprops.top)/cprops.height*450;
   
-  if (astats) {
-    if (x < 50 && y < 50) {
+  if (x < 0 || x >= 900 || y < 0 || y >= 900) return; //Пропустить клик, если он за пределами
+  
+  if (astats) { //Расширенная статистика
+    if (x < 50 && y < 50) { //Кнопка "Назад"
       vib(100);
       astats--;
       if (!astats) arendered = 0;
     }
-    if (astats < 4 && x > 850 && y < 50) {
+    if (astats < 5 && x > 850 && y < 50) { //Кнопка "Вперёд"
       vib(100);
       astats++;
     }
+    if (x > 850 && y > 400) { //Кнопка "Скриншот"
+      //Создание копии холста:
+      const s = document.createElement('canvas');
+      const scr = s.getContext('2d');
+      s.width = canvas.width;
+      s.height = canvas.height;
+      scr.putImageData(ctx.getImageData(0, 0, canvas.width, canvas.height), 0, 0);
+      
+      //Изменение изображения (нанесение водяного знака):
+      scr.fillStyle = theme.back;
+      scr.fillRect(S(850), S(400), S(50), S(25));
+      scr.fillRect(S(850), S(0), S(50), S(50));
+      scr.fillRect(S(0), S(0), S(50), S(50));
+      scr.font = S(18)+"px "+font;
+      scr.fillStyle = theme.text;
+      scr.fillText("Plant Simulator", S(700), S(30));
+      
+      const url = s.toDataURL('image/png'); //Получение base64-изображения
+      download(url, `plant_simulator_screenshot_${obj.name}.png`); //Скачивание изображения
+    }
+    return;
   }
   
   if (x > 835 && y > 400) { //Кнопка "Пауза/Продолжить"

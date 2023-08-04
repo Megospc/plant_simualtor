@@ -2,7 +2,7 @@
 ### **Добро пожаловать в «Симулятор Растений ![](assets/icon.svg)»!**
 **«Симулятор Растений»** — это модель, представляющая размножение и противостояние видов растений.
 
-Версия: **1.2.10** (31.07.2023)
+Версия: **1.3.19** (04.08.2023)
 
 Запустить можно [тут ![](assets/icon.svg "icon.svg")](https://megospc.github.io/plant_simulator "GitHub Pages").
 
@@ -18,10 +18,10 @@
 - \+ Chrome
 - \+ Microsoft Edge
 - \+ Chrome Mobile
-- \+ Edge Mobile
-- \+ FireFox Mobile
 - \+ Kiwi Browser
 - \+ Opera
+- ~ Edge Mobile
+- ~ FireFox Mobile
 - ~ Opera Mobile
 - ~ Yandex Mobile
 - ~ Safari

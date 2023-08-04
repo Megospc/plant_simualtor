@@ -1,4 +1,4 @@
-const version = "1.2.10";  //Версия программы
+const version = "1.3.19";  //Версия программы
 const options_list = [ //Список настроек
   { id: "size", type: "num", default: 28, check: [8, 50, true], label: "Размер поля: ", f: x => x, g: x => x },
   { id: "ggreen", type: "num", default: 250, check: [50, 10000, false], label: "Изначальный зелёный: ", f: x => x, g: x => x },
@@ -16,14 +16,17 @@ const options_list = [ //Список настроек
   { id: "cgreen", type: "num", default: 100, check: [0, 10000, false], label: "Добавка зелёного: ", f: x => x, g: x => x },
   { id: "cblue", type: "num", default: 100, check: [0, 10000, false], label: "Добавка синего: ", f: x => x, g: x => x },
   { id: "cred", type: "num", default: 100, check: [0, 10000, false], label: "Добавка красного: ", f: x => x, g: x => x },
-  { id: "btype", type: "sel", cases: () => ["зацикленные", "зеркальные", "обычные"], label: "Тип бортиков: ", f: x => ["thor", "bounce", "lemit"][x], g: x => ["thor", "bounce", "lemit"].indexOf(x) }
+  { id: "btype", type: "sel", cases: () => ["зацикленные", "зеркальные", "обычные"], label: "Тип бортиков: ", f: x => ["thor", "bounce", "lemit"][x], g: x => ["thor", "bounce", "lemit"].indexOf(x) },
+  { id: "fireprob", type: "num", default: 0.5, check: [0, 100, false], label: "Пожар — вероятность: ", f: x => x/100, g: x => x*100 },
+  { id: "firezone", type: "num", default: 30, check: [0, 25000, false], label: "Пожар — зона: ", f: x => x, g: x => x },
+  { id: "firetime", type: "num", default: 0.5, check: [0, 20, false], label: "Пожар — длительность: ", f: x => x, g: x => x }
 ];
 const plants_props_list = [ //Список свойств растений
   { id: "faze", type: "num", default: 12, check: [1, 500, true], label: "Длина фазы: ", f: x => x, g: x => x },
   { id: "consg", type: "num", default: 1, check: [0, 100, false], label: "Потребление зелёного: ", add: true, f: x => x, g: x => x },
   { id: "consb", type: "num", default: 1, check: [0, 100, false], label: "Потребление синего: ", add: true, f: x => x, g: x => x },
   { id: "consr", type: "num", default: 1, check: [0, 100, false], label: "Потребление красного: ", add: true, f: x => x, g: x => x },
-  { id: "initial", type: "num", default: 1, check: [0, 1000, true], label: "Изначальная популяция: ", f: x => x, g: x => x },
+  { id: "initial", type: "num", default: 1, check: [0, 10000, true], label: "Изначальная популяция: ", f: x => x, g: x => x },
   { id: "fruitsmin", type: "num", default: 1, check: [0, 100, true], label: "Количиство плодов (мин.): ", f: x => x, g: x => x },
   { id: "fruitsmax", type: "num", default: 3, check: [0, 100, true], label: "Количиство плодов (макс.): ", f: x => x+1, g: x => x-1 },
   { id: "fzone", type: "num", default: 50, check: [0, 2500, false], label: "Зона плодов: ", f: x => x, g: x => x },
@@ -51,12 +54,17 @@ const plants_props_list = [ //Список свойств растений
   { id: "paprob", type: "num", default: 0, check: [0, 100, false], label: "Паразит — вероятность: ", add: true, f: x => x/100, g: x => x*100 },
   { id: "pazone", type: "num", default: 50, check: [0, 2500, false], label: "Паразит — зона: ", add: true, f: x => x, g: x => x },
   { id: "parasite", type: "num", default: 1, check: [0, 100, false], label: "Паразит — количество: ", add: true, f: x => x, g: x => x },
+  { id: "creeprob", type: "num", default: 0, check: [0, 100, false], label: "Лиана — вероятность: ", add: true, f: x => x/100, g: x => x*100 },
+  { id: "creezone", type: "num", default: 50, check: [0, 2500, false], label: "Лиана — зона: ", add: true, f: x => x, g: x => x },
+  { id: "creeper", type: "num", default: 1, check: [0, 100, true], label: "Лиана — количество: ", add: true, f: x => x, g: x => x },
+  { id: "fire", type: "num", default: 0, check: [0, 10, false], label: "Возгорание: ", add: true, f: x => x/100, g: x => x*100 },
+  { id: "afire", type: "num", default: 0, check: [0, 100, false], label: "Огнеупорность: ", add: true, f: x => x/100, g: x => x*100 },
   { id: "big", type: "chk", default: false, label: "Большое", add: true, f: x => x, g: x => x },
   { id: "obscure", type: "chk", default: false, label: "Незаметное", add: true, f: x => x, g: x => x },
   { id: "nutrient", type: "chk", default: false, label: "Питательное", add: true, f: x => x, g: x => x }
 ];
 const animals_props_list = [ //Список свойств животных
-  { id: "initial", type: "num", default: 1, check: [0, 1000, true], label: "Изначальная популяция: ", f: x => x, g: x => x },
+  { id: "initial", type: "num", default: 1, check: [0, 10000, true], label: "Изначальная популяция: ", f: x => x, g: x => x },
   { id: "hungry", type: "num", default: 200, check: [1, 10000, false], label: "Изначальная сытость: ", f: x => x, g: x => x },
   { id: "speed", type: "num", default: 5, check: [1, 10, false], label: "Скорость: ", f: x => x, g: x => x },
   { id: "prob", type: "num", default: 2, check: [0, 100, false], label: "Вероятность: ", f: x => x/100, g: x => x*100 },
@@ -80,6 +88,10 @@ const animals_props_list = [ //Список свойств животных
   { id: "egrowmax", type: "num", default: 200, check: [0, 1000, false], label: "Рост яйца (макс.): ", add: true, f: x => x+1, g: x => x-1 },
   { id: "sayprob", type: "num", default: 50, check: [0, 100, false], label: "Переговоры — вероятность: ", add: true, f: x => x/100, g: x => x*100 },
   { id: "say", type: "num", default: 0, check: [0, Infinity, true], label: "Переговоры — язык: ", add: true, f: x => x, g: x => x },
+  { id: "sleprob", type: "num", default: 0, check: [0, 100, false], label: "Гипноз — вероятность: ", add: true, f: x => x/100, g: x => x*100 },
+  { id: "slezone", type: "num", default: 50, check: [0, 2500, false], label: "Гипноз — зона: ", add: true, f: x => x, g: x => x },
+  { id: "sleep", type: "num", default: 1, check: [0, 120, false], label: "Гипноз — длительность: ", add: true, f: x => x*1000, g: x => x/1000 },
+  { id: "afire", type: "num", default: 0, check: [0, 100, false], label: "Огнеупорность: ", add: true, f: x => x/100, g: x => x*100 },
   { id: "big", type: "chk", default: false, label: "Большое", add: true, f: x => x, g: x => x },
   { id: "carn", type: "chk", default: false, label: "Хищное", add: true, f: x => x, g: x => x },
   { id: "eggs", type: "chk", default: false, label: "Яйценос", add: true, f: x => x, g: x => x },
@@ -90,7 +102,7 @@ const funguses_props_list = [ //Список свойств грибов
   { id: "consg", type: "num", default: 0.03, check: [0, 100, false], label: "Потребление зелёного: ", add: true, f: x => x, g: x => x },
   { id: "consb", type: "num", default: 0.03, check: [0, 100, false], label: "Потребление синего: ", add: true, f: x => x, g: x => x },
   { id: "consr", type: "num", default: 0.03, check: [0, 100, false], label: "Потребление красного: ", add: true, f: x => x, g: x => x },
-  { id: "initial", type: "num", default: 1, check: [0, 1000, true], label: "Изначальная популяция: ", f: x => x, g: x => x },
+  { id: "initial", type: "num", default: 1, check: [0, 10000, true], label: "Изначальная популяция: ", f: x => x, g: x => x },
   { id: "mul", type: "num", default: 0.5, check: [0, 10, true], label: "Размножение: ", add: true, f: x => x/100, g: x => x*100 },
   { id: "ngrowmin", type: "num", default: 100, check: [0, 1000, false], label: "Рост гриба-плода (мин.): ", add: true, f: x => x, g: x => x },
   { id: "ngrowmax", type: "num", default: 200, check: [0, 1000, false], label: "Рост гриба-плода (макс.): ", add: true, f: x => x+1, g: x => x-1 },
@@ -119,7 +131,7 @@ var showspeed = 1; //Скорость показа
 var music = true; //Музыка
 var vibrate = false; //Вибрации
 var biggraph = false; //Большой график
-var graphmove = true; //Сдвиг графика
+var graphmove = false; //Сдвиг графика
 var musictype = 0; //Тип музыки
 
 function check(num, arr) { //Функция проверки числа
@@ -135,6 +147,10 @@ function json() { //Функция создания JSON симуляции
     flysize: 3,
     flyanim: 10,
     flycolor: "#00000080",
+    fireanimmin: 56,
+    fireanimmax: 200,
+    fireanimc: 0.3,
+    fireanimr: 5,
     ground: 35,
     graphmove: graphmove,
     biggraph: biggraph
