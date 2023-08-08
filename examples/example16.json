@@ -1,0 +1,79 @@
+{
+  "name": "сон-травы",
+  "options": {
+    "ggreen": 250,
+    "gblue": 250,
+    "gred": 250,
+    "gigreen": 0.1,
+    "giblue": 0.1,
+    "gired": 0.1,
+    "size": 28,
+    "gsize": 15,
+    "vibrate": true,
+    "cgreen": 250,
+    "cblue": 250,
+    "cred": 250,
+    "btype": "thor",
+    "musictype": 0,
+    "music": true
+  },
+  "style": {
+    "size": 5,
+    "resolution": 1800,
+    "sort": true,
+    "ground": 35
+  },
+  "plants": [
+    {
+      "name": "растения",
+      "color": "#00a000",
+      "faze": 12,
+      "consg": 1,
+      "consb": 1,
+      "consr": 1,
+      "initial": 30,
+      "fruitsmin": 1,
+      "fruitsmax": 4,
+      "fzone": 40,
+      "ngrowmin": 2,
+      "ngrowmax": 41
+    },
+    {
+      "name": "сон-травы",
+      "color": "#5000a0",
+      "faze": 12,
+      "consr": 1,
+      "consg": 1,
+      "consb": 1,
+      "initial": 2,
+      "fruitsmin": 1,
+      "fruitsmax": 4,
+      "fzone": 40,
+      "ngrowmin": 2,
+      "ngrowmax": 50,
+      "fvalue": 5,
+      "sleep": 1000,
+      "sleprob": 0.01,
+      "slezone": 100
+    }
+  ],
+  "animals": [
+    {
+      "name": "животные",
+      "color": "#00a0a0",
+      "initial": 3,
+      "change": 0.01,
+      "speed": 5,
+      "prob": 0.2,
+      "zone": 40,
+      "hungry": 300,
+      "hinc": 0.5,
+      "muln": 330,
+      "eggs": true,
+      "egrowmin": 100,
+      "egrowmax": 200,
+      "say": 1,
+      "sayprob": 0.2
+    }
+  ]
+}

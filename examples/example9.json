@@ -1,5 +1,5 @@
 {
-  "name": "росянки",
+  "name": "лианы-паразиты",
   "options": {
     "ggreen": 250,
     "gblue": 250,
@@ -13,30 +13,34 @@
     "cgreen": 250,
     "cblue": 250,
     "cred": 250,
-    "flycount": 200,
-    "flych": 0.1,
-    "flymul": 0.02,
-    "flyspeed": 5,
-    "flymax": 1000,
-    "flyadd": 0.005,
-    "flyaddc": 100,
     "btype": "thor",
     "musictype": 0,
     "music": true
   },
   "style": {
     "size": 5,
-    "flysize": 3,
-    "flyanim": 10,
-    "flycolor": "#00000080",
     "resolution": 1800,
     "sort": true,
     "ground": 35
   },
   "plants": [
     {
-      "name": "росянки",
-      "color": "#a00000",
+      "name": "растение",
+      "color": "#00a000",
+      "faze": 12,
+      "consg": 1,
+      "consb": 1,
+      "consr": 1,
+      "initial": 100,
+      "fruitsmin": 1,
+      "fruitsmax": 4,
+      "fzone": 50,
+      "ngrowmin": 2,
+      "ngrowmax": 40
+    },
+    {
+      "name": "лианы-паразиты",
+      "color": "#a00050",
       "faze": 12,
       "consg": 0,
       "consb": 0,
@@ -45,12 +49,15 @@
       "fruitsmin": 1,
       "fruitsmax": 4,
       "fzone": 50,
-      "ngrowmin": 1,
-      "ngrowmax": 41,
-      "carn": 0.05,
-      "czone": 50,
-      "cadd": 2,
-      "grow": 0
+      "ngrowmin": 2,
+      "ngrowmax": 40,
+      "grow": 0,
+      "parasite": 1,
+      "paprob": 0.05,
+      "pazone": 50,
+      "creeper": 5,
+      "creprob": 1,
+      "crezone": 50
     }
   ]
 }

@@ -1,5 +1,5 @@
 {
-  "name": "Plant Simulator default",
+  "name": "по умолчанию",
   "options": {
     "ggreen": 250,
     "gblue": 250,
@@ -23,9 +23,12 @@
     "btype": "thor",
     "musictype": 0,
     "music": true,
-    "fireprob": 0.005,
+    "fireprob": 0.05,
     "firezone": 30,
-    "firetime": 500
+    "firetime": 500,
+    "water": 0.00001,
+    "iwater": 0.005,
+    "awater": 0.00003
   },
   "style": {
     "size": 5,
@@ -39,6 +42,8 @@
     "fireanimmax": 200,
     "fireanimc": 0.3,
     "fireanimr": 5,
+    "watercolor": "#b0ffff",
+    "waterstcolor": "#00a0a0",
     "ground": 35
   },
   "plants": [
@@ -149,7 +154,9 @@
       "fvalue": 80,
       "creeprob": 0.2,
       "creezone": 50,
-      "creeper": 1
+      "creeper": 1,
+      "quprob": 0.2,
+      "quzone": 50
     },
     {
       "name": "паразиты",
@@ -224,7 +231,7 @@
   ],
   "funguses": [
     {
-      "name": "гриб",
+      "name": "грибы",
       "color": "#502800",
       "max": 420,
       "initial": 1,
@@ -232,7 +239,7 @@
       "consg": 0.03,
       "consb": 0.03,
       "grow": 0.5,
-      "mul": 0.005,
+      "mul": 0.01,
       "ngrowmin": 100,
       "ngrowmax": 200,
       "mycor": 1,

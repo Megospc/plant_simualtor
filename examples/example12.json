@@ -1,0 +1,45 @@
+{
+  "name": "дубы",
+  "options": {
+    "ggreen": 10000,
+    "gblue": 10000,
+    "gred": 10000,
+    "gigreen": 0.1,
+    "giblue": 0.1,
+    "gired": 0.1,
+    "size": 28,
+    "gsize": 15,
+    "vibrate": true,
+    "cgreen": 250,
+    "cblue": 250,
+    "cred": 250,
+    "btype": "thor",
+    "musictype": 0,
+    "music": true
+  },
+  "style": {
+    "size": 5,
+    "resolution": 1800,
+    "sort": true,
+    "ground": 35
+  },
+  "plants": [
+    {
+      "name": "дубы",
+      "color": "#28a000",
+      "faze": 500,
+      "consg": 1,
+      "consb": 1,
+      "consr": 1,
+      "initial": 1,
+      "fruitsmin": 10,
+      "fruitsmax": 31,
+      "fzone": 60,
+      "ngrowmin": 20,
+      "ngrowmax": 401,
+      "repeat": 99,
+      "rtimemin": 20,
+      "rtimemax": 401
+    }
+  ]
+}

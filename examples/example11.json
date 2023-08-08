@@ -1,0 +1,89 @@
+{
+  "name": "стабильный квартет",
+  "options": {
+    "ggreen": 250,
+    "gblue": 250,
+    "gred": 250,
+    "gigreen": 0.1,
+    "giblue": 0.1,
+    "gired": 0.1,
+    "size": 28,
+    "gsize": 15,
+    "vibrate": true,
+    "cgreen": 250,
+    "cblue": 250,
+    "cred": 250,
+    "btype": "thor",
+    "flycount": 100,
+    "flych": 0.1,
+    "flymul": 0.5,
+    "flyspeed": 5,
+    "flymax": 1000,
+    "musictype": 0,
+    "music": true
+  },
+  "style": {
+    "size": 5,
+    "resolution": 1800,
+    "sort": true,
+    "flysize": 3,
+    "flyanim": 10,
+    "flycolor": "#00000080",
+    "ground": 35
+  },
+  "plants": [
+    {
+      "name": "растения",
+      "color": "#a00000",
+      "faze": 12,
+      "consg": 0,
+      "consb": 0,
+      "consr": 0,
+      "initial": 300,
+      "fruitsmin": 1,
+      "fruitsmax": 4,
+      "fzone": 40,
+      "ngrowmin": 2,
+      "ngrowmax": 40,
+      "fvalue": 50,
+      "boom": 0.4,
+      "grow": 0,
+      "carn": 0.01,
+      "czone": 30,
+      "cadd": 14
+    }
+  ],
+  "animals": [
+    {
+      "name": "животные",
+      "color": "#00a0a0",
+      "initial": 10,
+      "change": 0.1,
+      "speed": 5,
+      "prob": 0.2,
+      "zone": 40,
+      "hungry": 300,
+      "hunincr": 0.5,
+      "muln": 330,
+      "eggs": true,
+      "egrowmin": 100,
+      "egrowmax": 200,
+      "fvalue": 50
+    },
+    {
+      "name": "хищники",
+      "color": "#800000",
+      "initial": 5,
+      "change": 0.1,
+      "speed": 5,
+      "prob": 0.02,
+      "zone": 40,
+      "hungry": 300,
+      "hunincr": 0.5,
+      "muln": 600,
+      "clezone": 50,
+      "cleprob": 0.1,
+      "carn": true
+    }
+  ]
+}
