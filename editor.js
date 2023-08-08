@@ -1,4 +1,4 @@
-const version = "1.3.22";  //Версия программы
+const version = "1.4.8";  //Версия программы
 const options_list = [ //Список настроек
   { id: "size", type: "num", default: 28, check: [8, 50, true], label: "Размер поля: ", f: x => x, g: x => x },
   { id: "ggreen", type: "num", default: 250, check: [50, 10000, false], label: "Изначальный зелёный: ", f: x => x, g: x => x },
@@ -19,7 +19,10 @@ const options_list = [ //Список настроек
   { id: "btype", type: "sel", cases: () => ["зацикленные", "зеркальные", "обычные"], label: "Тип бортиков: ", f: x => ["thor", "bounce", "lemit"][x], g: x => ["thor", "bounce", "lemit"].indexOf(x) },
   { id: "fireprob", type: "num", default: 0.5, check: [0, 100, false], label: "Пожар — вероятность: ", f: x => x/100, g: x => x*100 },
   { id: "firezone", type: "num", default: 30, check: [0, 25000, false], label: "Пожар — зона: ", f: x => x, g: x => x },
-  { id: "firetime", type: "num", default: 0.5, check: [0, 20, false], label: "Пожар — длительность: ", f: x => x*1000, g: x => x/1000 }
+  { id: "firetime", type: "num", default: 0.5, check: [0, 20, false], label: "Пожар — длительность: ", f: x => x*1000, g: x => x/1000 },
+  { id: "iwater", type: "num", default: 0, check: [0, 100, false], label: "Наводнение — изначальность: ", f: x => x/100, g: x => x*100 },
+  { id: "water", type: "num", default: 0, check: [0, 100, false], label: "Наводнение — вероятность: ", f: x => x/100, g: x => x*100 },
+  { id: "awater", type: "num", default: 0.01, check: [0, 100, false], label: "Наводнение — сход: ", f: x => x/100, g: x => x*100 }
 ];
 const plants_props_list = [ //Список свойств растений
   { id: "faze", type: "num", default: 12, check: [1, 500, true], label: "Длина фазы: ", f: x => x, g: x => x },
@@ -59,9 +62,12 @@ const plants_props_list = [ //Список свойств растений
   { id: "creeper", type: "num", default: 1, check: [0, 100, true], label: "Лиана — количество: ", add: true, f: x => x, g: x => x },
   { id: "fire", type: "num", default: 0, check: [0, 10, false], label: "Возгорание: ", add: true, f: x => x/100, g: x => x*100 },
   { id: "afire", type: "num", default: 0, check: [0, 100, false], label: "Огнеупорность: ", add: true, f: x => x/100, g: x => x*100 },
+  { id: "quprob", type: "num", default: 0, check: [0, 100, false], label: "Тушение — вероятность: ", add: true, f: x => x/100, g: x => x*100 },
+  { id: "quzone", type: "num", default: 50, check: [0, 2500, false], label: "Тушение — зона: ", add: true, f: x => x, g: x => x },
   { id: "big", type: "chk", default: false, label: "Большое", add: true, f: x => x, g: x => x },
   { id: "obscure", type: "chk", default: false, label: "Незаметное", add: true, f: x => x, g: x => x },
-  { id: "nutrient", type: "chk", default: false, label: "Питательное", add: true, f: x => x, g: x => x }
+  { id: "nutrient", type: "chk", default: false, label: "Питательное", add: true, f: x => x, g: x => x },
+  { id: "water", type: "chk", default: false, label: "Водное", add: true, f: x => x, g: x => x }
 ];
 const animals_props_list = [ //Список свойств животных
   { id: "initial", type: "num", default: 1, check: [0, 10000, true], label: "Изначальная популяция: ", f: x => x, g: x => x },
@@ -87,7 +93,7 @@ const animals_props_list = [ //Список свойств животных
   { id: "egrowmin", type: "num", default: 100, check: [0, 1000, false], label: "Рост яйца (мин.): ", add: true, f: x => x, g: x => x },
   { id: "egrowmax", type: "num", default: 200, check: [0, 1000, false], label: "Рост яйца (макс.): ", add: true, f: x => x+1, g: x => x-1 },
   { id: "sayprob", type: "num", default: 50, check: [0, 100, false], label: "Переговоры — вероятность: ", add: true, f: x => x/100, g: x => x*100 },
-  { id: "say", type: "num", default: 0, check: [0, Infinity, true], label: "Переговоры — язык: ", add: true, f: x => x, g: x => x },
+  { id: "say", type: "num", default: 0, check: [0, 1000, true], label: "Переговоры — язык: ", add: true, f: x => x, g: x => x },
   { id: "sleprob", type: "num", default: 0, check: [0, 100, false], label: "Гипноз — вероятность: ", add: true, f: x => x/100, g: x => x*100 },
   { id: "slezone", type: "num", default: 50, check: [0, 2500, false], label: "Гипноз — зона: ", add: true, f: x => x, g: x => x },
   { id: "sleep", type: "num", default: 1, check: [0, 120, false], label: "Гипноз — длительность: ", add: true, f: x => x*1000, g: x => x/1000 },
@@ -95,7 +101,8 @@ const animals_props_list = [ //Список свойств животных
   { id: "big", type: "chk", default: false, label: "Большое", add: true, f: x => x, g: x => x },
   { id: "carn", type: "chk", default: false, label: "Хищное", add: true, f: x => x, g: x => x },
   { id: "eggs", type: "chk", default: false, label: "Яйценос", add: true, f: x => x, g: x => x },
-  { id: "obscure", type: "chk", default: false, label: "Незаметное", add: true, f: x => x, g: x => x }
+  { id: "obscure", type: "chk", default: false, label: "Незаметное", add: true, f: x => x, g: x => x },
+  { id: "water", type: "chk", default: false, label: "Водное", add: true, f: x => x, g: x => x }
 ];
 const funguses_props_list = [ //Список свойств грибов
   { id: "max", type: "num", default: 420, check: [1, 2500, true], label: "Максимальный размер: ", f: x => x, g: x => x },
@@ -103,15 +110,17 @@ const funguses_props_list = [ //Список свойств грибов
   { id: "consb", type: "num", default: 0.03, check: [0, 100, false], label: "Потребление синего: ", add: true, f: x => x, g: x => x },
   { id: "consr", type: "num", default: 0.03, check: [0, 100, false], label: "Потребление красного: ", add: true, f: x => x, g: x => x },
   { id: "initial", type: "num", default: 1, check: [0, 10000, true], label: "Изначальная популяция: ", f: x => x, g: x => x },
+  { id: "expecs", type: "num", default: 0, check: [0, 2500, false], label: "Исключения: ", f: x => x, g: x => x },
   { id: "mul", type: "num", default: 0.5, check: [0, 10, true], label: "Размножение: ", add: true, f: x => x/100, g: x => x*100 },
   { id: "ngrowmin", type: "num", default: 100, check: [0, 1000, false], label: "Рост гриба-плода (мин.): ", add: true, f: x => x, g: x => x },
   { id: "ngrowmax", type: "num", default: 200, check: [0, 1000, false], label: "Рост гриба-плода (макс.): ", add: true, f: x => x+1, g: x => x-1 },
   { id: "protect", type: "num", default: 0, check: [0, 100, false], label: "Защита: ", add: true, f: x => x/100, g: x => x*100 },
   { id: "grow", type: "num", default: 0.5, check: [0, 5, false], label: "Скорость роста: ", add: true, f: x => x, g: x => x },
   { id: "mycor", type: "num", default: 0, check: [0, 10, false], label: "Микориза — рост: ", add: true, f: x => x, g: x => x },
-  { id: "amycor", type: "num", default: 0.1, check: [0, 10, false], label: "Микориза — исключения", f: x => x, g: x => x },
+  { id: "amycor", type: "num", default: 0.1, check: [0, 10, false], label: "Микориза — исключения: ", add: true, f: x => x, g: x => x },
   { id: "toxic", type: "num", default: 0, check: [0, 100, false], label: "Ядовитый: ", add: true, f: x => x/100, g: x => x*100 },
-  { id: "big", type: "chk", default: false, label: "Большой", add: true, f: x => x, g: x => x }
+  { id: "big", type: "chk", default: false, label: "Большой", add: true, f: x => x, g: x => x },
+  { id: "water", type: "chk", default: false, label: "Водный", add: true, f: x => x, g: x => x }
 ];
 
 var name = "без названия"; //Имя симуляции
@@ -152,6 +161,8 @@ function json() { //Функция создания JSON симуляции
     fireanimc: 0.3,
     fireanimr: 5,
     firecolor: "#a03000",
+    watercolor: "#b0ffff",
+    waterstcolor: "#00a0a0",
     ground: 35,
     graphmove: graphmove,
     biggraph: biggraph
@@ -490,8 +501,8 @@ function newfungus(name) { //Новый вид гриба
   div.innerHTML = `
   <div class="namediv">
     <input class="name" type="text" id="fungus_name${id}" value="${name ?? "без названия"}">
-    <button style="background-color: #00000000; border: none; display: inline;" onclick="deleteplant(${id})"><img src="assets/delete.svg" height="12"></button>
-    <button style="background-color: #00000000; border: none; display: inline;" onclick="copyplant(${id})"><img src="assets/copy.svg" height="12"></button>
+    <button style="background-color: #00000000; border: none; display: inline;" onclick="deletefungus(${id})"><img src="assets/delete.svg" height="12"></button>
+    <button style="background-color: #00000000; border: none; display: inline;" onclick="copyfungus(${id})"><img src="assets/copy.svg" height="12"></button>
     <input type="checkbox" id="fungus_hiddenstat${id}" style="display: inline" checked>
     <input type="checkbox" id="fungus_hiddengraph${id}" style="display: inline" checked>
   </div>
