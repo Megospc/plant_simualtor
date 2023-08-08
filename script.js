@@ -20,7 +20,7 @@
 /////                                                /////
 //////////////////////////////////////////////////////////
 
-const version = "1.4.8"; //Версия программы
+const version = "1.4.9"; //Версия программы
 const fps = 30; //Количество кадров в секунду
 const fpsTime = 1000/fps; //Миллисекунд на кадр
 const font = "Monospace"; //Шрифт текста
@@ -1602,7 +1602,7 @@ function frame_() { //Метод кадра
           ctx.textAlign = "left";
           
           sgraph([
-            { arr: stats.perf.time.map(x => 1000/x), state: { color: "#000000" } },
+            { arr: stats.perf.time.map(x => Math.min(1000/x, 2000)), state: { color: "#000000" } },
             { arr: new Array(stats.perf.time.length).fill(fps*(options.showspeed ?? 1)), state: { color: "#00a00080" } }
           ], 20, 120, 430, 215, mods.stats);
           sgraph([
