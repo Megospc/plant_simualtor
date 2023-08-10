@@ -28,7 +28,12 @@
     "firetime": 500,
     "water": 0.00001,
     "iwater": 0.005,
-    "awater": 0.00003
+    "awater": 0.001,
+    "airblue": 500000,
+    "airgreen": 500000,
+    "airred": 500000,
+    "fairblue": -5,
+    "fairred": 5
   },
   "style": {
     "size": 5,
@@ -44,6 +49,7 @@
     "fireanimr": 5,
     "watercolor": "#b0ffff",
     "waterstcolor": "#00a0a0",
+    "air": 35,
     "ground": 35
   },
   "plants": [
@@ -64,7 +70,9 @@
       "rtimemin": 2,
       "rtimemax": 40,
       "fvalue": 30,
-      "cleaner": 1
+      "cleaner": 1,
+      "airred": -2,
+      "airblue": 2
     },
     {
       "name": "растения 2",
@@ -80,7 +88,9 @@
       "ngrowmin": 2,
       "ngrowmax": 40,
       "fvalue": 30,
-      "boom": 0.5
+      "boom": 0.5,
+      "airred": -1,
+      "airblue": 1
     },
     {
       "name": "растения 3",
@@ -96,7 +106,9 @@
       "ngrowmin": 2,
       "ngrowmax": 40,
       "fvalue": 30,
-      "nutrient": true
+      "nutrient": true,
+      "airred": -2,
+      "airblue": 2
     },
     {
       "name": "растения 4",
@@ -118,7 +130,9 @@
       "fvalue": 50,
       "mgzone": 100,
       "mgpow": 1,
-      "fire": 0.0005
+      "fire": 0.0005,
+      "airblue": -3,
+      "airgreen": 3
     },
     {
       "name": "сон-травы",
@@ -136,7 +150,9 @@
       "fvalue": 5,
       "sleep": 1000,
       "sleprob": 0.01,
-      "slezone": 100
+      "slezone": 100,
+      "airred": -3,
+      "airblue": 3
     },
     {
       "name": "лианы",
@@ -174,7 +190,9 @@
       "fvalue": 30,
       "parasite": 3,
       "paprob": 0.01,
-      "pazone": 50
+      "pazone": 50,
+      "airblue": -1,
+      "airgreen": 1
     }
   ],
   "animals": [
@@ -191,7 +209,10 @@
       "muln": 600,
       "clezone": 100,
       "cleprob": 0.1,
-      "stomper": 0.5
+      "stomper": 0.5,
+      "airblue": -5,
+      "airred": 5,
+      "airnblue": 5000
     },
     {
       "name": "животные 2",
@@ -211,7 +232,10 @@
       "asleep": 0.5,
       "say": 1,
       "sayprob": 0.2,
-      "fvalue": 50
+      "fvalue": 50,
+      "airblue": -8,
+      "airred": 8,
+      "airnblue": 10000
     },
     {
       "name": "хищники",
@@ -226,7 +250,10 @@
       "muln": 600,
       "clezone": 50,
       "cleprob": 0.1,
-      "carn": true
+      "carn": true,
+      "airblue": -5,
+      "airred": 5,
+      "airnblue": 7000
     }
   ],
   "funguses": [
@@ -243,7 +270,27 @@
       "ngrowmin": 100,
       "ngrowmax": 200,
       "mycor": 1,
-      "amycor": 0.1
+      "amycor": 0.1,
+      "airblue": -2,
+      "airred": 2,
+      "expecs": 1,
+      "airnblue": 3000
+    },
+    {
+      "name": "грибы-мутанты",
+      "color": "#808080",
+      "max": 420,
+      "initial": 1,
+      "consr": 0.03,
+      "consg": 0.03,
+      "consb": 0.03,
+      "grow": 0.5,
+      "mul": 0.01,
+      "ngrowmin": 100,
+      "ngrowmax": 200,
+      "expecs": 30,
+      "airgreen": -1,
+      "airblue": 1
     }
   ]
 }
