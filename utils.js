@@ -1,3 +1,5 @@
+"use strict";
+
 //DOM:
 const $ = id => document.getElementById(id);
 const $hide = id => $(id).style.display = 'none';
@@ -33,7 +35,7 @@ const r2d = x => x*180/PI; //Радианы в градусы
 const disev = (x0, y0, x1, y1) => Math.sqrt((x1-x0)**2+(y1-y0)**2); //Эвклидова метрика
 
 //Проверки:
-const prob = x => rnd() < x; //Проверка вероятности
+const prob = x => rnd() < (x ?? 0); //Проверка вероятности
 const zone = (a, b, zone) => distance(a, b) <= zone; //Проверка зоны
 
 function fullScreen(e) { //Метод полного экрана
@@ -55,9 +57,11 @@ function download(url, name) { //Метод скачивания файла
 async function wakelock() { //Метод отключения затемнения экрана
   if (navigator.wakeLock) {
     let o = await navigator.wakeLock.request("screen"); //Отключение затемнения экрана
+    
     o.addEventListener('release', function() { //Если отключение отмененено
       o = null;
     });
+    
     document.addEventListener("visibilitychange", async function() { //Повторная блокировка
       if (o && document.visibilityState === "visible") wakelock();
     });
@@ -176,7 +180,7 @@ function rgraph(data, x, y, r, s) { //Метод круглого графика
   //Обработка выделения:
   const sx = s?.x;
   const sy = s?.y;
-  const sb = disev(sx, sy, x, y) < r;
+  const sb = sum && disev(sx, sy, x, y) < r;
   const sa = 0.5-Math.atan2((sx-700), (sy-225))/PI/2-0.25;
   const sd = sa < 0 ? 1+sa:sa;
   let si, sp;
