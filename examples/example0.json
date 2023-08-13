@@ -28,7 +28,9 @@
     "firetime": 500,
     "water": 0.00001,
     "iwater": 0.005,
-    "awater": 0.00003
+    "awater": 0.00003,
+    "oxygen": 8000,
+    "foxygen": 5
   },
   "style": {
     "size": 5,
@@ -44,6 +46,9 @@
     "fireanimr": 5,
     "watercolor": "#b0ffff",
     "waterstcolor": "#00a0a0",
+    "oxycolor": "#c0b0ff",
+    "noxycolor": "#300030",
+    "oxygen": 128,
     "ground": 35
   },
   "plants": [
@@ -64,7 +69,8 @@
       "rtimemin": 2,
       "rtimemax": 40,
       "fvalue": 30,
-      "cleaner": 1
+      "cleaner": 1,
+      "oxygen": 2
     },
     {
       "name": "растения 2",
@@ -80,7 +86,8 @@
       "ngrowmin": 2,
       "ngrowmax": 40,
       "fvalue": 30,
-      "boom": 0.5
+      "boom": 0.5,
+      "oxygen": 1
     },
     {
       "name": "растения 3",
@@ -96,7 +103,8 @@
       "ngrowmin": 2,
       "ngrowmax": 40,
       "fvalue": 30,
-      "nutrient": true
+      "nutrient": true,
+      "oxygen": 2
     },
     {
       "name": "растения 4",
@@ -136,7 +144,8 @@
       "fvalue": 5,
       "sleep": 1000,
       "sleprob": 0.01,
-      "slezone": 100
+      "slezone": 100,
+      "oxygen": 3
     },
     {
       "name": "лианы",
@@ -191,7 +200,8 @@
       "muln": 600,
       "clezone": 100,
       "cleprob": 0.1,
-      "stomper": 0.5
+      "stomper": 0.5,
+      "oxygen": 5
     },
     {
       "name": "животные 2",
@@ -211,7 +221,8 @@
       "asleep": 0.5,
       "say": 1,
       "sayprob": 0.2,
-      "fvalue": 50
+      "fvalue": 50,
+      "oxygen": 8
     },
     {
       "name": "хищники",
@@ -226,7 +237,8 @@
       "muln": 600,
       "clezone": 50,
       "cleprob": 0.1,
-      "carn": true
+      "carn": true,
+      "oxygen": 5
     }
   ],
   "funguses": [
@@ -243,7 +255,9 @@
       "ngrowmin": 100,
       "ngrowmax": 200,
       "mycor": 1,
-      "amycor": 0.1
+      "amycor": 0.1,
+      "oxygen": 2,
+      "expecs": 1
     }
   ]
 }
