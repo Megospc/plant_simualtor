@@ -1,4 +1,4 @@
-const version = "1.4.9";  //Версия программы
+const version = "1.5.2A";  //Версия программы
 const options_list = [ //Список настроек
   { id: "size", type: "num", default: 28, check: [8, 50, true], label: "Размер поля: ", f: x => x, g: x => x },
   { id: "ggreen", type: "num", default: 250, check: [50, 10000, false], label: "Изначальный зелёный: ", f: x => x, g: x => x },
@@ -20,9 +20,11 @@ const options_list = [ //Список настроек
   { id: "fireprob", type: "num", default: 0.5, check: [0, 100, false], label: "Пожар — вероятность: ", f: x => x/100, g: x => x*100 },
   { id: "firezone", type: "num", default: 30, check: [0, 25000, false], label: "Пожар — зона: ", f: x => x, g: x => x },
   { id: "firetime", type: "num", default: 0.5, check: [0, 20, false], label: "Пожар — длительность: ", f: x => x*1000, g: x => x/1000 },
-  { id: "iwater", type: "num", default: 0, check: [0, 100, false], label: "Наводнение — изначальность: ", f: x => x/100, g: x => x*100 },
+  { id: "foxygen", type: "num", default: 0, check: [0, 1000000, false], label: "Пожар — кислородность: ", f: x => x, g: x => x },
+  { id: "iwater", type: "num", default: 0, check: [0, 100, false], label: "Наводнение — начало: ", f: x => x/100, g: x => x*100 },
   { id: "water", type: "num", default: 0, check: [0, 100, false], label: "Наводнение — вероятность: ", f: x => x/100, g: x => x*100 },
-  { id: "awater", type: "num", default: 0.01, check: [0, 100, false], label: "Наводнение — сход: ", f: x => x/100, g: x => x*100 }
+  { id: "awater", type: "num", default: 0.01, check: [0, 100, false], label: "Наводнение — сход: ", f: x => x/100, g: x => x*100 },
+  { id: "oxygen", type: "num", default: 0, check: [0, 1000000, false], label: "Изначальный кислород: ", f: x => x, g: x => x }
 ];
 const plants_props_list = [ //Список свойств растений
   { id: "faze", type: "num", default: 12, check: [1, 500, true], label: "Длина фазы: ", f: x => x, g: x => x },
@@ -64,6 +66,8 @@ const plants_props_list = [ //Список свойств растений
   { id: "afire", type: "num", default: 0, check: [0, 100, false], label: "Огнеупорность: ", add: true, f: x => x/100, g: x => x*100 },
   { id: "quprob", type: "num", default: 0, check: [0, 100, false], label: "Тушение — вероятность: ", add: true, f: x => x/100, g: x => x*100 },
   { id: "quzone", type: "num", default: 50, check: [0, 2500, false], label: "Тушение — зона: ", add: true, f: x => x, g: x => x },
+  { id: "oxygen", type: "num", default: 0, check: [-100, 100, false], label: "Кислородность: ", add: true, f: x => x, g: x => x },
+  { id: "aoxygen", type: "num", default: 0, check: [-100, 100, false], label: "Кислородная выносливость: ", add: true, f: x => x, g: x => x },
   { id: "big", type: "chk", default: false, label: "Большое", add: true, f: x => x, g: x => x },
   { id: "obscure", type: "chk", default: false, label: "Незаметное", add: true, f: x => x, g: x => x },
   { id: "nutrient", type: "chk", default: false, label: "Питательное", add: true, f: x => x, g: x => x },
@@ -98,6 +102,8 @@ const animals_props_list = [ //Список свойств животных
   { id: "slezone", type: "num", default: 50, check: [0, 2500, false], label: "Гипноз — зона: ", add: true, f: x => x, g: x => x },
   { id: "sleep", type: "num", default: 1, check: [0, 120, false], label: "Гипноз — длительность: ", add: true, f: x => x*1000, g: x => x/1000 },
   { id: "afire", type: "num", default: 0, check: [0, 100, false], label: "Огнеупорность: ", add: true, f: x => x/100, g: x => x*100 },
+  { id: "oxygen", type: "num", default: 0, check: [-100, 100, false], label: "Кислородность: ", add: true, f: x => x, g: x => x },
+  { id: "aoxygen", type: "num", default: 0, check: [-100, 100, false], label: "Кислородная выносливость: ", add: true, f: x => x, g: x => x },
   { id: "big", type: "chk", default: false, label: "Большое", add: true, f: x => x, g: x => x },
   { id: "carn", type: "chk", default: false, label: "Хищное", add: true, f: x => x, g: x => x },
   { id: "eggs", type: "chk", default: false, label: "Яйценос", add: true, f: x => x, g: x => x },
@@ -119,6 +125,8 @@ const funguses_props_list = [ //Список свойств грибов
   { id: "mycor", type: "num", default: 0, check: [0, 10, false], label: "Микориза — рост: ", add: true, f: x => x, g: x => x },
   { id: "amycor", type: "num", default: 0.1, check: [0, 10, false], label: "Микориза — исключения: ", add: true, f: x => x, g: x => x },
   { id: "toxic", type: "num", default: 0, check: [0, 100, false], label: "Ядовитый: ", add: true, f: x => x/100, g: x => x*100 },
+  { id: "oxygen", type: "num", default: 0, check: [-100, 100, false], label: "Кислородность: ", add: true, f: x => x, g: x => x },
+  { id: "aoxygen", type: "num", default: 0, check: [-100, 100, false], label: "Кислородная выносливость: ", add: true, f: x => x, g: x => x },
   { id: "big", type: "chk", default: false, label: "Большой", add: true, f: x => x, g: x => x },
   { id: "water", type: "chk", default: false, label: "Водный", add: true, f: x => x, g: x => x }
 ];
@@ -163,6 +171,9 @@ function json() { //Функция создания JSON симуляции
     firecolor: "#a03000",
     watercolor: "#b0ffff",
     waterstcolor: "#00a0a0",
+    oxycolor: "#c0b0ff",
+    noxycolor: "#300030",
+    oxygen: 128,
     ground: 35,
     graphmove: graphmove,
     biggraph: biggraph
@@ -253,14 +264,14 @@ function json() { //Функция создания JSON симуляции
   }
   
   const obj = { //Объект симуляции
-    name: name,
-    description: description,
-    version: version,
-    style: style,
-    options: options,
-    plants: plants,
-    animals: animals,
-    funguses: funguses
+    name,
+    description,
+    version,
+    style,
+    options,
+    plants,
+    animals,
+    funguses
   };
   return JSON.stringify(obj); //Создание JSON
 }

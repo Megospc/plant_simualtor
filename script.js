@@ -20,7 +20,7 @@
 /////                                                /////
 //////////////////////////////////////////////////////////
 
-const version = "1.4.9"; //Версия программы
+const version = "1.5.2A"; //Версия программы
 const fps = 30; //Количество кадров в секунду
 const fpsTime = 1000/fps; //Миллисекунд на кадр
 const font = "Monospace"; //Шрифт текста
@@ -55,7 +55,9 @@ const defaultJSON = `{
     "firetime": 500,
     "water": 0.00001,
     "iwater": 0.005,
-    "awater": 0.00003
+    "awater": 0.00003,
+    "oxygen": 8000,
+    "foxygen": 5
   },
   "style": {
     "size": 5,
@@ -71,6 +73,9 @@ const defaultJSON = `{
     "fireanimr": 5,
     "watercolor": "#b0ffff",
     "waterstcolor": "#00a0a0",
+    "oxycolor": "#c0b0ff",
+    "noxycolor": "#300030",
+    "oxygen": 128,
     "ground": 35
   },
   "plants": [
@@ -91,7 +96,8 @@ const defaultJSON = `{
       "rtimemin": 2,
       "rtimemax": 40,
       "fvalue": 30,
-      "cleaner": 1
+      "cleaner": 1,
+      "oxygen": 2
     },
     {
       "name": "растения 2",
@@ -107,7 +113,8 @@ const defaultJSON = `{
       "ngrowmin": 2,
       "ngrowmax": 40,
       "fvalue": 30,
-      "boom": 0.5
+      "boom": 0.5,
+      "oxygen": 1
     },
     {
       "name": "растения 3",
@@ -123,7 +130,8 @@ const defaultJSON = `{
       "ngrowmin": 2,
       "ngrowmax": 40,
       "fvalue": 30,
-      "nutrient": true
+      "nutrient": true,
+      "oxygen": 2
     },
     {
       "name": "растения 4",
@@ -163,7 +171,8 @@ const defaultJSON = `{
       "fvalue": 5,
       "sleep": 1000,
       "sleprob": 0.01,
-      "slezone": 100
+      "slezone": 100,
+      "oxygen": 3
     },
     {
       "name": "лианы",
@@ -218,7 +227,8 @@ const defaultJSON = `{
       "muln": 600,
       "clezone": 100,
       "cleprob": 0.1,
-      "stomper": 0.5
+      "stomper": 0.5,
+      "oxygen": 5
     },
     {
       "name": "животные 2",
@@ -238,7 +248,8 @@ const defaultJSON = `{
       "asleep": 0.5,
       "say": 1,
       "sayprob": 0.2,
-      "fvalue": 50
+      "fvalue": 50,
+      "oxygen": 8
     },
     {
       "name": "хищники",
@@ -253,7 +264,8 @@ const defaultJSON = `{
       "muln": 600,
       "clezone": 50,
       "cleprob": 0.1,
-      "carn": true
+      "carn": true,
+      "oxygen": 5
     }
   ],
   "funguses": [
@@ -270,7 +282,9 @@ const defaultJSON = `{
       "ngrowmin": 100,
       "ngrowmax": 200,
       "mycor": 1,
-      "amycor": 0.1
+      "amycor": 0.1,
+      "oxygen": 2,
+      "expecs": 1
     }
   ]
 }`; //JSON симуляции "по умолчанию"
@@ -397,14 +411,14 @@ function sort(id) { //Метод сортировки статистики
   }
 }
 
-function graph(size, x, y) { //Отрисовка графиков
+function graph(size, x, y, s, m) { //Отрисовка графиков
   //Массивы информации:
   const p = stats.plants.map((x, i) => ({ arr: x, state: plants[i] })); //Растения
   const a = stats.animals.map((x, i) => ({ arr: x, state: animals[i] })); //Животные
   const f = stats.funguses.map((x, i) => ({ arr: x, state: funguses[i] })); //Грибы
   const data = p.concat(a).concat(f);
   
-  if (data.length) sgraph(data, x, y, size, size/2, null, style.graphmove);
+  sgraph(data.length ? data:[{ arr: new Array(frame).fill(0), state: { color: "#00000000" } }], x, y, size, size/2, s, m ?? style.graphmove);
 }
 
 function resize() { //Метод изменения размера холста
@@ -630,6 +644,14 @@ class Fire { //Класс огня
       return;
     }
     
+    if (options.oxygen && options.foxygen) { //Потребление кислорода
+      if (counters.oxygen < options.foxygen) { //Если кислорода не достаточно
+        counters.oxygen = 0;
+        this.dead();
+        return;
+      } else counters.oxygen -= options.foxygen;
+    }
+    
     forall(this, ["plant", "animal", "egg", "fly", "mushroom"], function(p, o, s) { //Возгорание
       if (zone(o, this, options.firezone)) if (prob(options.fireprob)) { //Если растение в зоне и вероятность сбылась
         if (p.type == "plant" || p.type == "animal" || p.type == "egg") if (prob(s.afire)) return; //Если защита объекта сработала — пропустить
@@ -817,6 +839,18 @@ class Animal { //Класс животных
     if (gnd.water && !state.water) { //Смерть от наводнения
       this.dead();
       return;
+    }
+    
+    if (options.oxygen && state.oxygen) { //Свойство "Кислородность"
+      const c = state.oxygen;
+      if (counters.oxygen < c) { //Если кислорода не достаточно
+        counters.oxygen = 0;
+        
+        if (prob(state.aoxygen)) {
+          this.dead();
+          return;
+        }
+      } else counters.oxygen -= c;
     }
     
     if (this.sleep) { //Обработка сна
@@ -1114,6 +1148,18 @@ class Mycelium { //Класс грибниц
       }
     }
     
+    if (options.oxygen && state.oxygen) { //Свойство "Кислородность"
+      const c = state.oxygen*(gnds.length**1.5); //Количество кислорода
+      if (counters.oxygen < c) { //Если кислорода не достаточно
+        counters.oxygen = 0;
+        
+        if (prob(state.aoxygen)) {
+          this.dead();
+          return;
+        }
+      } else counters.oxygen -= c;
+    }
+    
     if (prob(state.mul)) new Mushroom(this.state, rand(this.x-this.grow/2, this.x+this.grow/2), rand(this.y-this.grow/2, this.y+this.grow/2)); //Размножение
     this.grow = Math.min(this.grow+(state.grow ?? 1), state.max); //Рост
   }
@@ -1162,6 +1208,18 @@ class Plant { //Класс растений
     if (gnd.water && !state.water) { //Смерть от наводнения
       this.dead();
       return;
+    }
+    
+    if (options.oxygen && state.oxygen) { //Свойство "Кислородность"
+      const c = -state.oxygen;
+      if (counters.oxygen < c) { //Если кислорода не достаточно
+        counters.oxygen = 0;
+        
+        if (prob(state.aoxygen)) {
+          this.dead();
+          return;
+        }
+      } else counters.oxygen -= c;
     }
     
     if (state.quprob && state.quzone) forall(this, ["fire"], function(p, o) { //Свойство "Тушение"
@@ -1336,6 +1394,7 @@ function start() { //Метод инициализации
   const fsize = options.size*options.gsize; //Полный размер поля
   scale = 420/fsize; //Установка масштаба
   stats = {
+    oxygen: [],
     fly: [],
     fire: [],
     water: [],
@@ -1351,6 +1410,7 @@ function start() { //Метод инициализации
   arr = []; //Очистка массива объектов
   pause = false; //Не пауза
   counters = { //Устновка счётчиков
+    oxygen: options.oxygen ?? 0,
     fly: { count: 0, history: 0 },
     fire: { count: 0, history: 0 },
     water: { count: 0, history: 0 },
@@ -1500,12 +1560,7 @@ function frame_() { //Метод кадра
           ctx.fillText("График:", S(450), S(30));
           ctx.textAlign = "left";
           
-          //Массивы информации:
-          const p = stats.plants.map((x, i) => ({ arr: x, state: plants[i] })); //Растения
-          const a = stats.animals.map((x, i) => ({ arr: x, state: animals[i] })); //Животные
-          const f = stats.funguses.map((x, i) => ({ arr: x, state: funguses[i] })); //Грибы
-          
-          sgraph(p.concat(a).concat(f), 20, 20, 860, 430, mods.stats);
+          graph(860, 20, 20, mods.stats, false);
         }
         break;
       case 4:
@@ -1518,11 +1573,13 @@ function frame_() { //Метод кадра
           ctx.fillText("Мухи:", S(235), S(60));
           ctx.fillText("Пожар:", S(655), S(60));
           ctx.fillText("Наводнение:", S(235), S(260));
+          ctx.fillText("Кислород:", S(655), S(260));
           ctx.textAlign = "left";
           
           sgraph([{ arr: stats.fly, state: { color: style.flycolor } }], 50, 60, 350, 175, mods.stats);
           sgraph([{ arr: stats.fire, state: { color: style.firecolor } }], 470, 60, 350, 175, mods.stats);
           sgraph([{ arr: stats.water, state: { color: style.waterstcolor } }], 50, 260, 350, 175, mods.stats);
+          sgraph([{ arr: stats.oxygen, state: { color: style.oxycolor } }], 470, 260, 350, 175, mods.stats);
         }
         break;
       case 5:
@@ -1588,6 +1645,7 @@ function frame_() { //Метод кадра
           ctx.fillText("Реальное время: "+floor(time/1000, 3)+"с", S(20), S(170), S(860));
           ctx.fillText("Средний расчёт: "+floor(time/frame, 2)+"мс", S(20), S(200), S(860));
           ctx.fillText("Количество ячеек: "+arr.length, S(20), S(230), S(860));
+          ctx.fillText("Количество кислорода: "+flr(counters.oxygen), S(20), S(260), S(860));
         }
         break;
       case 7:
@@ -1644,6 +1702,7 @@ function frame_() { //Метод кадра
     stats.fly.push(counters.fly.count);
     stats.fire.push(counters.fire.count);
     stats.water.push(counters.water.count);
+    stats.oxygen.push(counters.oxygen);
     
     if (prob(options.flyadd)) for (let i = 0; i < (options.flyaddc ?? 1) && counters.fly.count < options.flymax; i++) new Fly(); //Добавка мух
     for (let i = 0; i < arr.length; i++) if (arr[i].avail) arr[i].obj.handler(); //Обработка объектов
@@ -1655,7 +1714,12 @@ function frame_() { //Метод кадра
   clear();
   ctx.textBaseline = "middle";
   if (style.ground) for (let x = 0; x < options.size; x++) for (let y = 0; y < options.size; y++) ground[x][y].render(x*options.gsize*scale+15, y*options.gsize*scale+15, options.gsize*scale, options.gsize*scale); //Отрисовка земли
-  for (let i = 0; i < arr.length; i++) if (arr[i].avail) arr[i].obj.render(); //Отрисовка объектов
+  for (let i = 0; i < arr.length; i++) if (arr[i].avail) arr[i].obj.render(); //Отрисовка объекто
+  
+  if (options.oxygen) { //Отрисовка кислорода:
+    ctx.fillStyle = style.noxycolor+hex((1-counters.oxygen/options.oxygen)*style.oxygen);
+    ctx.fillRect(S(5), S(5), S(440), S(440));
+  }
   
   //Отрисовка "бортиков":
   ctx.fillStyle = theme.elements;
@@ -1918,18 +1982,18 @@ function mousemove(e) { //Движение мышью
     ctx.shadowColor = "#a00000";
     ctx.shadowBlur = S(5);
     ctx.beginPath();
-    ctx.moveTo(S(mods.last.x ?? x), S(mods.last.y ?? y));
+    ctx.moveTo(S(mods.last?.x ?? x), S(mods.last?.y ?? y));
     ctx.lineTo(S(x), S(y));
     ctx.stroke();
     ctx.shadowBlur = 0;
   }
   
   if (astats) { //Выделение статистики
-    mods.stats = { x: x, y: y };
+    mods.stats = { x, y };
     arendered = false;
   }
   
-  mods.last = { x: x, y: y };
+  mods.last = { x, y };
 }
 
 window.onload = function() {
