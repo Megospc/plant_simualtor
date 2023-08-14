@@ -1,6 +1,6 @@
 "use strict";
 
-const version = "1.5.5";  //Версия программы
+const version = "1.6.4";  //Версия программы
 const options_list = [ //Список настроек
   { id: "size", type: "num", default: 28, check: [8, 50, true], label: "Размер поля: ", f: x => x, g: x => x },
   { id: "ggreen", type: "num", default: 250, check: [50, 10000, false], label: "Изначальный зелёный: ", f: x => x, g: x => x },
@@ -75,9 +75,9 @@ const plants_props_list = [ //Список свойств растений
   { id: "airred", type: "num", default: 0, check: [-100, 100, false], label: "Углекислый газ: ", add: true, f: x => x, g: x => x },
   { id: "airgreen", type: "num", default: 0, check: [-100, 100, false], label: "Метан: ", add: true, f: x => x, g: x => x },
   { id: "airblue", type: "num", default: 0, check: [-100, 100, false], label: "Кислород: ", add: true, f: x => x, g: x => x },
-  { id: "airnred", type: "num", default: 0, check: [-100, 100, false], label: "Нужный углекислый газ: ", add: true, f: x => x, g: x => x },
-  { id: "airngreen", type: "num", default: 0, check: [-100, 100, false], label: "Нужный метан: ", add: true, f: x => x, g: x => x },
-  { id: "airnblue", type: "num", default: 0, check: [-100, 100, false], label: "Нужный кислород: ", add: true, f: x => x, g: x => x },
+  { id: "airnred", type: "num", default: 0, check: [0, 10000000, false], label: "Нужный углекислый газ: ", add: true, f: x => x, g: x => x },
+  { id: "airngreen", type: "num", default: 0, check: [0, 10000000, false], label: "Нужный метан: ", add: true, f: x => x, g: x => x },
+  { id: "airnblue", type: "num", default: 0, check: [0, 10000000, false], label: "Нужный кислород: ", add: true, f: x => x, g: x => x },
   { id: "aair", type: "num", default: 0, check: [-100, 100, false], label: "Газовая выносливость: ", add: true, f: x => x, g: x => x },
   { id: "big", type: "chk", default: false, label: "Большое", add: true, f: x => x, g: x => x },
   { id: "obscure", type: "chk", default: false, label: "Незаметное", add: true, f: x => x, g: x => x },
@@ -103,7 +103,6 @@ const animals_props_list = [ //Список свойств животных
   { id: "gred", type: "num", default: 0, check: [0, 1000, false], label: "Разложение — красный: ", add: true, f: x => x, g: x => x },
   { id: "ggreen", type: "num", default: 0, check: [0, 1000, false], label: "Разложение — зелёный: ", add: true, f: x => x, g: x => x },
   { id: "gblue", type: "num", default: 0, check: [0, 1000, false], label: "Разложение — синий: ", add: true, f: x => x, g: x => x },
-  { id: "protect", type: "num", default: 0, check: [0, 100, false], label: "Защита: ", add: true, f: x => x/100, g: x => x*100 },
   { id: "asleep", type: "num", default: 0, check: [0, 100, false], label: "Антисон: ", add: true, f: x => x/100, g: x => x*100 },
   { id: "egrowmin", type: "num", default: 100, check: [0, 1000, false], label: "Рост яйца (мин.): ", add: true, f: x => x, g: x => x },
   { id: "egrowmax", type: "num", default: 200, check: [0, 1000, false], label: "Рост яйца (макс.): ", add: true, f: x => x+1, g: x => x-1 },
@@ -116,10 +115,18 @@ const animals_props_list = [ //Список свойств животных
   { id: "airred", type: "num", default: 0, check: [-100, 100, false], label: "Углекислый газ: ", add: true, f: x => x, g: x => x },
   { id: "airgreen", type: "num", default: 0, check: [-100, 100, false], label: "Метан: ", add: true, f: x => x, g: x => x },
   { id: "airblue", type: "num", default: 0, check: [-100, 100, false], label: "Кислород: ", add: true, f: x => x, g: x => x },
-  { id: "airnred", type: "num", default: 0, check: [-100, 100, false], label: "Нужный углекислый газ: ", add: true, f: x => x, g: x => x },
-  { id: "airngreen", type: "num", default: 0, check: [-100, 100, false], label: "Нужный метан: ", add: true, f: x => x, g: x => x },
-  { id: "airnblue", type: "num", default: 0, check: [-100, 100, false], label: "Нужный кислород: ", add: true, f: x => x, g: x => x },
+  { id: "airnred", type: "num", default: 0, check: [0, 10000000, false], label: "Нужный углекислый газ: ", add: true, f: x => x, g: x => x },
+  { id: "airngreen", type: "num", default: 0, check: [0, 10000000, false], label: "Нужный метан: ", add: true, f: x => x, g: x => x },
+  { id: "airnblue", type: "num", default: 0, check: [0, 10000000, false], label: "Нужный кислород: ", add: true, f: x => x, g: x => x },
   { id: "aair", type: "num", default: 0, check: [-100, 100, false], label: "Газовая выносливость: ", add: true, f: x => x, g: x => x },
+  { id: "division", type: "num", default: 0, check: [0, 100, false], label: "Деление — вероятность: ", add: true, f: x => x/100, g: x => x*100 },
+  { id: "divzone", type: "num", default: 50, check: [0, 2500, false], label: "Деление — зона: ", add: true, f: x => x, g: x => x },
+  { id: "hideprob", type: "num", default: 0, check: [0, 100, false], label: "Броненосец — вероятность: ", add: true, f: x => x/100, g: x => x*100 },
+  { id: "hide", type: "num", default: 50, check: [0, 120, false], label: "Броненосец — длительность: ", add: true, f: x => x*1000, g: x => x/1000 },
+  { id: "paprob", type: "num", default: 0, check: [0, 100, false], label: "Паразит — вероятность: ", add: true, f: x => x/100, g: x => x*100 },
+  { id: "pazone", type: "num", default: 50, check: [0, 2500, false], label: "Паразит — зона: ", add: true, f: x => x, g: x => x },
+  { id: "parasite", type: "num", default: 1, check: [0, 100, false], label: "Паразит — количество: ", add: true, f: x => x, g: x => x },
+  { id: "vampire", type: "num", default: 0, check: [0, 100, false], label: "Вампиризм: ", add: true, f: x => x/100, g: x => x*100 },
   { id: "big", type: "chk", default: false, label: "Большое", add: true, f: x => x, g: x => x },
   { id: "carn", type: "chk", default: false, label: "Хищное", add: true, f: x => x, g: x => x },
   { id: "eggs", type: "chk", default: false, label: "Яйценос", add: true, f: x => x, g: x => x },
@@ -144,9 +151,9 @@ const funguses_props_list = [ //Список свойств грибов
   { id: "airred", type: "num", default: 0, check: [-100, 100, false], label: "Углекислый газ: ", add: true, f: x => x, g: x => x },
   { id: "airgreen", type: "num", default: 0, check: [-100, 100, false], label: "Метан: ", add: true, f: x => x, g: x => x },
   { id: "airblue", type: "num", default: 0, check: [-100, 100, false], label: "Кислород: ", add: true, f: x => x, g: x => x },
-  { id: "airnred", type: "num", default: 0, check: [-100, 100, false], label: "Нужный углекислый газ: ", add: true, f: x => x, g: x => x },
-  { id: "airngreen", type: "num", default: 0, check: [-100, 100, false], label: "Нужный метан: ", add: true, f: x => x, g: x => x },
-  { id: "airnblue", type: "num", default: 0, check: [-100, 100, false], label: "Нужный кислород: ", add: true, f: x => x, g: x => x },
+  { id: "airnred", type: "num", default: 0, check: [0, 10000000, false], label: "Нужный углекислый газ: ", add: true, f: x => x, g: x => x },
+  { id: "airngreen", type: "num", default: 0, check: [0, 10000000, false], label: "Нужный метан: ", add: true, f: x => x, g: x => x },
+  { id: "airnblue", type: "num", default: 0, check: [0, 10000000, false], label: "Нужный кислород: ", add: true, f: x => x, g: x => x },
   { id: "aair", type: "num", default: 0, check: [-100, 100, false], label: "Газовая выносливость: ", add: true, f: x => x, g: x => x },
   { id: "big", type: "chk", default: false, label: "Большой", add: true, f: x => x, g: x => x },
   { id: "water", type: "chk", default: false, label: "Водный", add: true, f: x => x, g: x => x }
@@ -353,7 +360,7 @@ function newplant(name) { //Новый вид растения
     <button class="color" style="background-color: #808080; border-color: #707070;" onclick="$('plant_color${id}').value='#808080'"></button>
   </div>
   ${props}
-  <p class="add" onclick="add(${id})">Дополнительно <img id="plant_aopen${id}" src="assets/down.svg" width="12"></p>
+  <p class="add" onclick="add(${id})">Дополнительно <img id="plant_aclose${id}" src="assets/down.svg" width="12"><img id="plant_aopen${id}" style="display: none" src="assets/up.svg" width="12"></p>
   <div id="plant_add${id}" style="display: none">${aprops}</div>`;
   $('plants').appendChild(div);
   return id;
@@ -462,7 +469,7 @@ function newanimal(name) { //Новый вид животного
     <button class="color" style="background-color: #808080; border-color: #707070;" onclick="$('animal_color${id}').value='#808080'"></button>
   </div>
   ${props}
-  <p class="add" onclick="aadd(${id})">Дополнительно <img id="animal_aopen${id}" src="assets/down.svg" width="12"></p>
+  <p class="add" onclick="aadd(${id})">Дополнительно <img id="animal_aclose${id}" src="assets/down.svg" width="12"><img id="animal_aopen${id}" style="display: none" src="assets/up.svg" width="12"></p>
   <div id="animal_add${id}" style="display: none">${aprops}</div>`;
   $('animals').appendChild(div);
   return id;
@@ -566,7 +573,7 @@ function newfungus(name) { //Новый вид гриба
     <button class="color" style="background-color: #804000; border-color: #703000;" onclick="$('fungus_color${id}').value='#804000'"></button>
   </div>
   ${props}
-  <p class="add" onclick="fadd(${id})">Дополнительно <img id="fungus_aopen${id}" src="assets/down.svg" width="12"></p>
+  <p class="add" onclick="fadd(${id})">Дополнительно <img id="fungus_aclose${id}" src="assets/down.svg" width="12"><img id="fungus_aopen${id}" style="display: none" src="assets/up.svg" width="12"></p>
   <div id="fungus_add${id}" style="display: none">${aprops}</div>`;
   $('funguses').appendChild(div);
   return id;
@@ -613,11 +620,13 @@ function copyfungus(id) { //Копирование вида гриба
 function add(id) { //Скрыть/показать дополнительные свойства растений
   if (plants_addprops[id]) {
     plants_addprops[id] = false;
-    $("plant_aopen"+id).src = "assets/down.svg";
+    $hide("plant_aopen"+id);
+    $showi("plant_aclose"+id);
     $hide("plant_add"+id);
   } else {
     plants_addprops[id] = true;
-    $("plant_aopen"+id).src = "assets/up.svg";
+    $showi("plant_aopen"+id);
+    $hide("plant_aclose"+id);
     $show("plant_add"+id);
   }
 }
@@ -625,11 +634,13 @@ function add(id) { //Скрыть/показать дополнительные 
 function aadd(id) { //Скрыть/показать дополнительные свойства животных
   if (animals_addprops[id]) {
     animals_addprops[id] = false;
-    $("animal_aopen"+id).src = "assets/down.svg";
+    $hide("animal_aopen"+id);
+    $showi("animal_aclose"+id);
     $hide("animal_add"+id);
   } else {
     animals_addprops[id] = true;
-    $("animal_aopen"+id).src = "assets/up.svg";
+    $showi("animal_aopen"+id);
+    $hide("animal_aclose"+id);
     $show("animal_add"+id);
   }
 }
@@ -637,11 +648,13 @@ function aadd(id) { //Скрыть/показать дополнительные
 function fadd(id) { //Скрыть/показать дополнительные свойства грибов
   if (funguses_addprops[id]) {
     funguses_addprops[id] = false;
-    $("fungus_aopen"+id).src = "assets/down.svg";
-    $hide("animal_add"+id);
+    $hide("fungus_aopen"+id);
+    $showi("fungus_aclose"+id);
+    $hide("fungus_add"+id);
   } else {
     funguses_addprops[id] = true;
-    $("fungus_aopen"+id).src = "assets/up.svg";
+    $showi("fungus_aopen"+id);
+    $hide("fungus_aclose"+id);
     $show("fungus_add"+id);
   }
 }
@@ -649,11 +662,13 @@ function fadd(id) { //Скрыть/показать дополнительные
 function addopt() { //Скрыть/показать дополнительные настройки
   if (addopen) {
     addopen = false;
-    $("aopen").src = "assets/down.svg";
+    $hide("aopen");
+    $showi("aclose");
     $hide("add");
   } else {
     addopen = true;
-    $("aopen").src = "assets/up.svg";
+    $showi("aopen");
+    $hide("aclose");
     $show("add");
   }
 }

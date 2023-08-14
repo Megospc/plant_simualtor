@@ -22,7 +22,7 @@
 
 "use strict";
 
-const version = "1.5.5"; //Версия программы
+const version = "1.6.4"; //Версия программы
 const fps = 30; //Количество кадров в секунду
 const fpsTime = 1000/fps; //Миллисекунд на кадр
 const font = "Monospace"; //Шрифт текста
@@ -39,7 +39,7 @@ const defaultJSON = `{
     "size": 28,
     "gsize": 15,
     "flycount": 100,
-    "flych": 0.1,
+    "flych": 0.01,
     "flymul": 0.02,
     "flyspeed": 5,
     "flymax": 1000,
@@ -264,7 +264,11 @@ const defaultJSON = `{
       "fvalue": 50,
       "airblue": -8,
       "airred": 8,
-      "airnblue": 10000
+      "airnblue": 10000,
+      "division": 0.1,
+      "divzone": 50,
+      "hide": 3000,
+      "hideprob": 0.01
     },
     {
       "name": "хищники",
@@ -355,11 +359,11 @@ var mods; //Объект модификаций
 var ptime; //Время на расчёт
 var timer; //Таймер
 const S = x => x*cscale; //Функция масштабирования холста
-const theme = {
+const theme = { //Цветовая тема
   back: "#ffffff",
   elements: "#d0d0d0",
   text: "#000000"
-}; //Цветовая тема
+};
 const timeNow = () => frame*fpsTime; //Функция игрового времени
 
 function clear() { //Метод очистки холста
@@ -414,34 +418,34 @@ function vib(len) { //Метод вибрации
 function sort(id = "count") { //Метод сортировки статистики
   sorted = []; //Очистка массива
   
-  function fill(arr, id) { //Метод заполнения массива
+  function fill(arr, id, type) { //Метод заполнения массива
     for (let i = 0; i < arr.length; i++) {
       const state = arr[i];
-      if (!state.hiddenstat) sorted.push({ counter: counters[id][i], state: state, type: id }); //Если не указанно "не отображать на статистике"
+      if (!state.hiddenstat) sorted.push({ counter: counters[id][i], state, type }); //Если не указанно "не отображать на статистике"
     }
   }
   
   //Заполнение массива:
-  fill(plants, "plants");
-  fill(animals, "animals");
-  fill(funguses, "funguses");
+  fill(plants, "plants", "plant");
+  fill(animals, "animals", "animal");
+  fill(funguses, "funguses", "fungus");
   if (counters.fly.history) sorted.push({ state: { color: style.flycolor, name: "мухи" }, counter: counters.fly, type: "fly" }); //Добавление мух
   if (counters.fire.history) sorted.push({ state: { color: style.firecolor, name: "пожар" }, counter: counters.fire, type: "fire" }); //Добавление огня
   if (counters.water.history) sorted.push({ state: { color: style.waterstcolor, name: "наводнение" }, counter: counters.water, type: "water" }); //Добавление огня
   
   if (style.sort) { //Сортировка
     for (let j = 0; j < sorted.length-1; j++) {
-      let max = sorted[j];
-      let maxi = j;
+      let m = sorted[j];
+      let k = j;
       for (let i = j; i < sorted.length; i++) {
-        const state = sorted[i];
-        if (state.counter[id] > max.counter[id]) {
-          maxi = i;
-          max = state;
+        const p = sorted[i];
+        if (p.counter[id] > m.counter[id]) {
+          k = i;
+          m = p;
         }
       }
-      sorted[maxi] = sorted[j];
-      sorted[j] = max;
+      sorted[k] = sorted[j];
+      sorted[j] = m;
     }
   }
 }
@@ -516,11 +520,11 @@ function register(obj, type) { //Метод регистрации объект�
     id = i;
     break;
   }
-   
+  
   arr[id] = {
     avail: true, //Место занято
-    obj: obj, //Объект
-    type: type //Тип объекта
+    obj, //Объект
+    type //Тип объекта
   };
   
   return id;
@@ -533,11 +537,15 @@ function deregister(id) { //Метод дерегистрации объекта
 
 function forall(obj, types, g, nav) { //Метод проверки объектов
   const f = (p, o, s) => g.call(obj, p, o, s);
+  
   for (let i = 0; i < arr.length; i++) { //Проверка всех объектов
     const p = arr[i];
+    
     if (!p.avail && !nav) continue; //Если объект не живой — пропустить
     if (!types.includes(p.type)) continue; //Если тип не подходит — пропустить
+    
     const o = p.obj; //Объект
+    
     switch (p.type) { //Выполнение
       case "plant":
         if (f(p, o, plants[o.state])) return;
@@ -684,7 +692,7 @@ class Ground { //Класс земли
   }
 }
 
-class Fire { //Класс огня
+class Fire { //Класс огоньков
   constructor(x, y) {
     //Усатновка координат:
     this.x = x;
@@ -699,11 +707,11 @@ class Fire { //Класс огня
     counters.fire.count++;
     counters.fire.history++;
   }
-  dead() {
+  dead() { //Метод тушения
     deregister(this.id); //Дерегистрация огня
     counters.fire.count--; //Обновление счётчика
   }
-  handler() {
+  handler() { //Метод обработки
     const gnd = ground[Math.floor(this.x/options.gsize)][Math.floor(this.y/options.gsize)]; //Земля под огнём
     
     if (gnd.water) { //Тушение от наводнения
@@ -729,7 +737,7 @@ class Fire { //Класс огня
     });
     if (timeNow() > this.time+(options.firetime ?? 1000)) this.dead(); //Тушение со временем
   }
-  render() {
+  render() { //Метод отрисовки
     function fig(size) {
       const s = style.size*size;
       ctx.beginPath();
@@ -833,7 +841,7 @@ class Egg { //Класс яиц
     }
   }
   render() { //Метод отрисовки
-  const state = animals[this.state]; //Вид яйца
+    const state = animals[this.state]; //Вид яйца
     function fig(size) {
       const s = style.size*size;
       ctx.beginPath();
@@ -844,6 +852,7 @@ class Egg { //Класс яиц
       ctx.closePath();
       ctx.fill();
     }
+    
     ctx.fillStyle = state.color;
     fig.call(this, this.grow/this.ngrow*0.8+0.2);
   }
@@ -853,6 +862,7 @@ class Animal { //Класс животных
   constructor(state, x, y) {
     this.state = state; //Вид животного
     this.speed = {}; //Объект скорости
+    this.hide = false; //Под бронёй?
     
     //Установка координат:
     const fsize = options.size*options.gsize; //Полный размер поля
@@ -904,19 +914,21 @@ class Animal { //Класс животных
     const state = animals[this.state]; //Вид животного
     const gnd = ground[Math.floor(this.x/options.gsize)][Math.floor(this.y/options.gsize)]; //Земля под животным
     
-    if (gnd.water && !state.water) { //Смерть от наводнения
-      this.dead();
-      return;
-    }
-    
-    if (!consair(state)) { //Потребление газов
-      this.dead();
-      return;
-    }
+    if (gnd.water && !state.water) return void this.dead(); //Смерть от наводнения
+    if (!consair(state)) return void this.dead(); //Потребление газов
     
     if (this.sleep) { //Обработка сна
       if (timeNow() > this.sleep) this.sleep = false; //Пробуждение
       else { //Проверка сна
+        this.hungry -= state.slehun ?? 0; //Потребление еды
+        if (this.hungry < 0) this.dead(true); //Смерть от голода
+        return; //Конец обработки
+      }
+    }
+    
+    if (this.hide) { //Обработка брони
+      if (timeNow() > this.hide) this.hide = false;
+      else {
         this.hungry -= state.slehun ?? 0; //Потребление еды
         if (this.hungry < 0) this.dead(true); //Смерть от голода
         return; //Конец обработки
@@ -957,9 +969,33 @@ class Animal { //Класс животных
     this.x = testCord(this.x+this.speed.x, style.size);
     this.y = testCord(this.y+this.speed.y, style.size);
     
+    if (!this.hide && state.hide) if (prob(state.hideprob)) { //Свойство "Броненосец"
+      this.hide = timeNow()+state.hide;
+      this.anim(300);
+    }
+    
     if (state.sleprob && state.sleep && state.slezone) forall(this, ["animal"], function(p, o, s) { //Свойство "Гипноз"
       if (o.state == this.state) return; //Если животное того же вида — пропустить
-      if (zone(o, this, state.slezone)) if (prob(state.sleprob)) o.tosleep(state.sleep); //Если животное в зоне и вероятность сбылась, оно засыпает
+      if (zone(o, this, state.slezone)) if (prob(state.sleprob)) o.tosleep(state.sleep); //Если животное в зоне и вероятность сбылась, то оно засыпает
+    });
+    
+    if (state.division && state.divzone) forall(this, ["animal"], function(p, o, s) { //Свойство "Деление"
+      if (o.state == this.state) if (zone(o, this, state.divzone)) if (prob(state.division)) { //Если животное того же вида, находится в зоне и вероятность сбылась
+        const r = this.hungry-o.hungry; //Разница очков сытости
+        if (r > 0) {
+          this.hungry -= r/2;
+          o.hungry += r/2;
+        }
+      }
+    });
+    
+    if (state.paprob && state.parasite && state.pazone) forall(this, ["animal"], function(p, o, s) { //Свойство "Паразит"
+      if (p.state == this.state) return; //Если животное того же вида — пропустить
+      if (zone(o, this, state.pazone)) if (prob(state.paprob)) { //Если животное в зоне и вероятность сбылась
+        const a = o.hungry < state.parasite ? o.hungry:state.parasite; //Количество забираемой сытости
+        o.hungry -= a; //Уменьшение сытости жертвы
+        this.hungry += a; //Прибавление сытости
+      }
     });
     
     if (state.carn) { //Свойство "Хищное"
@@ -967,17 +1003,23 @@ class Animal { //Класс животных
         if (p.type == "plant") { //Если это растение
           if (!s.nutrient) return; //Если растение не питательное — пропустить
           if (o.faze == 0) return; //Если это семя — пропустить
-        } else if (o.state == this.state) return; //Если животное того же вида — пропустить
+        } else {
+          if (o.state == this.state) return; //Если животное того же вида — пропустить
+          if (o.hide) return; //Если животное в броне — пропустить
+        }
           
         if (s.big && !state.big) return; //Свойство "Большое"
         if (zone(o, this, state.zone)) if (prob(state.prob)) { //Если растение в зоне атаки и вероятность сбылась
           if (prob(s.protect)) return; //Если защита объекта сработала
           if (p.type == "plant") {
             if (prob(s.boom)) o.fruits(); //Свойство "Взрывное"
-            if (!prob(state.stomper)) this.hungry += (s.fvalue ?? 50)*(o.faze == 1 ? o.grow/s.faze:1); //Прибавление сытости и свтойство "Топотун"
+            if (!prob(state.stomper)) this.hungry += (s.fvalue ?? 50)*(o.faze == 1 ? o.grow/s.faze:1); //Прибавление сытости и свойство "Топотун"
             if (prob(s.cleaner && this.hungry > state.hungry)) this.hungry = state.hungry; //Свойство "Очистка"
-          } else this.hungry += s.fvalue ?? 50; //Прибавление сытости
-          o.dead(); //Растение погибает
+          } else {
+            this.hungry += s.fvalue ?? 50; //Прибавление сытости
+            if (state.vampire) this.hungry += state.vampire*o.hungry; //Свойство "Вампиризм"
+          }
+          o.dead(); //Объект погибает
           if (prob(s.toxic)) { //Свойство "Ядовитое"
             this.dead(); //Смерть от яда
             return true;
@@ -1008,7 +1050,7 @@ class Animal { //Класс животных
         if (zone(o, this, state.zone)) if (prob(state.prob)) { //Если растение в зоне атаки и вероятность сбылась
           if (prob(s.protect)) return; //Если защита объекта сработала
           if (p.type == "plant") if (prob(s.boom)) o.fruits(); //Свойство "Взрывное"
-          if (!prob(state.stomper)) this.hungry += (s.fvalue ?? 50)*(o.faze == 1 ? o.grow/s.faze:1); //Прибавление сытости и свтойство "Топотун"
+          if (!prob(state.stomper)) this.hungry += (s.fvalue ?? 50)*(o.faze == 1 ? o.grow/s.faze:1); //Прибавление сытости и свойство "Топотун"
           if (p.type == "plant") if (prob(s.cleaner) && this.hungry > state.hungry) this.hungry = state.hungry; //Свойство "Очистка"
           o.dead(); //Растение погибает
           if (prob(s.toxic)) { //Свойство "Ядовитое"
@@ -1037,17 +1079,28 @@ class Animal { //Класс животных
     }
     
     this.hungry -= state.hinc ?? 1; //Трата очков сытости
-    if (this.hungry < 0) this.dead(true); //Смерть от голода
+    if (this.hungry < 0) return void this.dead(true); //Смерть от голода
   }
   render() { //Метод отрисовки
     const state = animals[this.state]; //Вид животного
     function fig(size) {
       const s = style.size*size;
       ctx.beginPath();
-      ctx.moveTo(S(this.x*scale+15), S((this.y-s/2)*scale+15));
-      ctx.lineTo(S((this.x+s/2)*scale+15), S(this.y*scale+15));
-      ctx.lineTo(S(this.x*scale+15), S((this.y+s/2)*scale+15));
-      ctx.lineTo(S((this.x-s/2)*scale+15), S(this.y*scale+15));
+      if (this.hide) { //Броня
+        ctx.moveTo(S((this.x-s/6)*scale+15), S((this.y-s/2)*scale+15));
+        ctx.lineTo(S((this.x+s/6)*scale+15), S((this.y-s/2)*scale+15));
+        ctx.lineTo(S((this.x+s/2)*scale+15), S((this.y-s/6)*scale+15));
+        ctx.lineTo(S((this.x+s/2)*scale+15), S((this.y+s/6)*scale+15));
+        ctx.lineTo(S((this.x+s/6)*scale+15), S((this.y+s/2)*scale+15));
+        ctx.lineTo(S((this.x-s/6)*scale+15), S((this.y+s/2)*scale+15));
+        ctx.lineTo(S((this.x-s/2)*scale+15), S((this.y+s/6)*scale+15));
+        ctx.lineTo(S((this.x-s/2)*scale+15), S((this.y-s/6)*scale+15));
+      } else {
+        ctx.moveTo(S(this.x*scale+15), S((this.y-s/2)*scale+15));
+        ctx.lineTo(S((this.x+s/2)*scale+15), S(this.y*scale+15));
+        ctx.lineTo(S(this.x*scale+15), S((this.y+s/2)*scale+15));
+        ctx.lineTo(S((this.x-s/2)*scale+15), S(this.y*scale+15));
+      }
       ctx.closePath();
       ctx.fill();
     }
@@ -1073,7 +1126,7 @@ class Animal { //Класс животных
     this.sleep = timeNow()+len;
     this.anim(300);
   }
-  anim(len) { //Функция анимации
+  anim(len) { //Метод анимации
     //Сохранение параметров:
     this.atime = timeNow();
     this.alen = len;
@@ -1082,7 +1135,7 @@ class Animal { //Класс животных
 
 class Mushroom { //Класс грибов-плодов
   constructor(state, x, y) {
-    this.grow = 0; //Установка счётчика роста
+    this.grow = 0; //Счётчик роста
     this.state = state; //Вид гриба
     
     this.init(); //Инициализация
@@ -1109,26 +1162,19 @@ class Mushroom { //Класс грибов-плодов
     const gnd = ground[Math.floor(this.x/options.gsize)][Math.floor(this.y/options.gsize)]; //Земля под грибом
     let res = true; //Результат потребления
     
-    if (gnd.water && !state.water) { //Смерть от наводнения
-      this.dead();
-      return;
-    }
+    if (gnd.water && !state.water) return void this.dead(); //Смерть от наводнения
     
     //Потребление:
     res &&= gnd.red(state.consr);
     res &&= gnd.green(state.consg);
     res &&= gnd.blue(state.consb);
     
-    if (!res) { //Смерть от недостатка минералов
-      this.dead();
-      return;
-    }
+    if (!res) return void this.dead(); //Смерть от недостатка минералов
     
     this.grow++; //Рост
     if (this.grow >= this.ngrow) { //Полный рост
       new Mycelium(this.state, this.x, this.y);
-      this.dead();
-      return;
+      return void this.dead();
     }
   }
   render() {
@@ -1202,17 +1248,11 @@ class Mycelium { //Класс грибниц
       
       if (!res) { //Смерть от недостатка минералов
         if (saves >= 1) saves--; //Если есть исключения, трата исключения
-        else { //Если нет — смерть
-          this.dead();
-          return;
-        }
+        else return void this.dead(); //Если нет — смерть
       }
     }
     
-    if (!consair(state, gnds.length**1.5)) { //Потребление газов
-      this.dead();
-      return;
-    }
+    if (!consair(state, gnds.length**1.5)) return void this.dead(); //Потребление газов
     
     if (prob(state.mul)) new Mushroom(this.state, rand(this.x-this.grow/2, this.x+this.grow/2), rand(this.y-this.grow/2, this.y+this.grow/2)); //Размножение
     this.grow = Math.min(this.grow+(state.grow ?? 1), state.max); //Рост
@@ -1259,15 +1299,8 @@ class Plant { //Класс растений
     const state = plants[this.state]; //Вид растения
     const gnd = ground[Math.floor(this.x/options.gsize)][Math.floor(this.y/options.gsize)]; //Земля под растением
     
-    if (gnd.water && !state.water) { //Смерть от наводнения
-      this.dead();
-      return;
-    }
-    
-    if (!consair(state)) { //Потребление газов
-      this.dead();
-      return;
-    }
+    if (gnd.water && !state.water) return void this.dead(); //Смерть от наводнения
+    if (!consair(state)) return void this.dead(); //Потребление газов
     
     if (state.quprob && state.quzone) forall(this, ["fire"], function(p, o) { //Свойство "Тушение"
       if (zone(o, this, state.quzone)) if (prob(state.quprob)) o.dead();
@@ -1296,7 +1329,7 @@ class Plant { //Класс растений
     });
     
     if (state.paprob && state.parasite && state.pazone) forall(this, ["plant"], function(p, o, s) { //Свойство "Паразит"
-      if (zone(o, this, state.pazone)) if (prob(state.paprob)) { //Если животное в зоне и вероятность сбылась
+      if (zone(o, this, state.pazone)) if (prob(state.paprob)) { //Если растение в зоне и вероятность сбылась
         const a = o.grow < state.parasite ? o.grow:state.parasite; //Количество забираемого роста
         o.grow -= a; //Уменьшение роста жертвы
         this.grow += a; //Прибавление роста
@@ -1313,27 +1346,27 @@ class Plant { //Класс растений
     
     if (res) {
       this.grow += state.grow ?? 1; //Получение удалось — прибавление роста
+      
       const n = this.faze == 0 || this.faze == 4 ? this.ngrow:state.faze; //Необходимый рост
+      
       if (this.grow >= n) { //Если рост достаточен
         this.faze++; //Новая фаза
         this.grow = 0; //Сброс роста
-        if (this.faze > 1) this.anim(300);
+        
+        if (this.faze > 1) this.anim(300); //Анимация
+        
         if (this.faze == 4) { //Полный рост
-          this.fruits();
+          this.fruits(); //Разброс плодов
+          
           if (state.repeat > this.repeat) { //Свойство "Повтор"
             this.repeat++; //Обновление счётчика повторений
             this.ngrow = rand(state.rtimemin, state.rtimemax); //Установка таймера
-          } else {
-            this.dead(); //Смерть (конец жизненного цикла)
-            return;
-          }
+          } else return void this.dead(); //Смерть (конец жизненного цикла)
         }
       }
+      
       if (this.faze == 5) this.faze = 2; //Конец отдыха
-    } else {
-      this.dead(); //Минерала недостаточно — смерть
-      return;
-    }
+    } else return void this.dead(); //Минерала недостаточно — смерть
     
     if (state.attack && state.azone) forall(this, ["plant"], function(p, o, s) { //Свойство "Атака"
       if (o.faze == 0) return; //Если это семя — пропустить
@@ -1347,10 +1380,7 @@ class Plant { //Класс растений
         if (s.creeprob && s.creeper) return; //Если это лиана — пропустить
         if (zone(o, this, state.creezone)) c++; //Обновление счётчика
       });
-      if (c < state.creeper && prob(state.creeprob)) { //Если растений недостаточно и вероятность сбылась
-        this.dead(); //Смерть
-        return;
-      }
+      if (c < state.creeper && prob(state.creeprob)) return void this.dead(); //Если растений недостаточно и вероятность сбылась — смерть
     }
     
     if (this.faze && prob(state.fire)) { //Свойство "Возгорание"
@@ -1419,6 +1449,7 @@ class Plant { //Класс растений
   fruits() { //Метод разброса фруктов
     const state = plants[this.state]; //Вид растения
     const fruits = Math.floor(rand(state.fruitsmin, state.fruitsmax));
+    
     for (let i = 0; i < fruits; i++) { //Разброс плодов
       const x = this.x+rand(-state.fzone, state.fzone);
       const y = this.y+rand(-state.fzone, state.fzone);
@@ -1439,9 +1470,12 @@ function start() { //Метод инициализации
   ptime = fpsTime; //Сброс времени на расчёт
   stime = performance.now(); //Сохранение текущего времени
   timer = 0; //Сброс таймера
+  arr = []; //Очистка массива объектов
+  pause = false; //Не пауза
   const fsize = options.size*options.gsize; //Полный размер поля
   scale = 420/fsize; //Установка масштаба
-  stats = {
+  
+  stats = { //Очистка сохранённой статистики
     air: {
       red: [],
       green: [],
@@ -1458,9 +1492,7 @@ function start() { //Метод инициализации
       time: [],
       sum: []
     }
-  }; //Очистка сохранённой статистики
-  arr = []; //Очистка массива объектов
-  pause = false; //Не пауза
+  };
   counters = { //Устновка счётчиков
     air: {
       red: options.airred,
@@ -1472,8 +1504,11 @@ function start() { //Метод инициализации
     water: { count: 0, history: 0 },
     plants: [],
     animals: [],
-    funguses: []
+    funguses: [],
+    clicks: 0,
+    randoms: 0
   };
+  
   mods = { //Установка модификаций
     add: false,
     draw: false
@@ -1529,10 +1564,11 @@ function frame_() { //Метод кадра
     }
   } else if (stime === false) stime = performance.now(); //Возобновление реального времени
   
-  if (mods.draw) return; //Остановка при модификациях
+  if (mods.draw) return; //Остановка при рисовании
   
-  if (astats) { //Расширенные настройки
+  if (astats) { //Расширенная статистика
     if (arendered == astats) return; //Если уже отрисованно — пропустить
+    
     clear();
     ctx.fillStyle = theme.elements;
     ctx.beginPath();
@@ -1739,6 +1775,8 @@ function frame_() { //Метод кадра
           ctx.fillText("Реальное время: "+floor(time/1000, 3)+"с", S(20), S(170), S(860));
           ctx.fillText("Средний расчёт: "+floor(time/frame, 2)+"мс", S(20), S(200), S(860));
           ctx.fillText("Количество ячеек: "+arr.length, S(20), S(230), S(860));
+          ctx.fillText("Количество случайных чисел: "+counters.randoms, S(20), S(260), S(860));
+          ctx.fillText("Количество добавок кликом: "+counters.clicks, S(20), S(290), S(860));
         }
         break;
       case 8:
@@ -1851,9 +1889,17 @@ function frame_() { //Метод кадра
       ctx.fillText("Статистика:", S(490), S(120))
       ctx.font = S(size)+"px "+font;
       for (let i = 0; i < sorted.length; i++) { //Отрисовка статистики
-        const c = sorted[i];
-        ctx.fillStyle = c.state.color;
-        ctx.fillText(c.counter.count+" | "+c.state.name, S(490), S(180+i*size*1.6), S(380));
+        const p = sorted[i];
+        const c = p.counter;
+        const s = p.state;
+        let str = "";
+        str += c.count;
+        if (c.eggs) str += " ("+c.eggs+")";
+        if (c.fruits) str += " ("+c.fruits+")";
+        str += " | ";
+        str += s.name;
+        ctx.fillStyle = s.color;
+        ctx.fillText(str, S(490), S(180+i*size*1.6), S(380));
       }
       
       graph(200, 670, 10); //Стандартный график
@@ -1969,6 +2015,7 @@ function stimer() { //Метод таймера
   const len = +str; //Число длины
   
   if (str === null) { //Если длина не введена
+    //Сброс таймера:
     timer = 0;
     return;
   }
@@ -1979,7 +2026,7 @@ function stimer() { //Метод таймера
 
 function screenshot() { //Метод скришота
   //Создание копии холста:
-  const s = document.createElement('canvas');
+  const s = $create('canvas');
   const scr = s.getContext('2d');
   s.width = canvas.width;
   s.height = canvas.height;
@@ -1997,7 +2044,7 @@ function screenshot() { //Метод скришота
 }
 function sscreenshot() { //Метод скришота статистики
   //Создание копии холста:
-  const s = document.createElement('canvas');
+  const s = $create('canvas');
   const scr = s.getContext('2d');
   s.width = canvas.width;
   s.height = canvas.height;
@@ -2053,7 +2100,7 @@ function click(e) { //Обработчик кликов
   const x = (e.pageX-cprops.left)/cprops.width*900;
   const y = (e.pageY-cprops.top)/cprops.height*450;
   
-  if (x < 0 || x >= 900 || y < 0 || y >= 900) return; //Пропустить клик, если он за пределами
+  if (x < 0 || x >= 900 || y < 0 || y >= 900) return; //Пропустить клик, если он за пределами холста
   
   if (astats) { //Расширенная статистика
     if (x < 50 && y < 50) { //Кнопка "Назад"
@@ -2094,10 +2141,12 @@ function click(e) { //Обработчик кликов
     vib(100);
     stimer();
   }
+  
   if (x >= 15 && x < 435 && y >= 15 && y < 435 && !pause) { //Добавка кликом
     vib(30);
     const gnd = ground[Math.floor((x-15)*scale/options.gsize)][Math.floor((y-15)*scale/options.gsize)];
     gnd.click();
+    counters.clicks++;
   }
 }
 
@@ -2118,7 +2167,7 @@ function keydown(e) { //Зажатие клавиши
     case "KeyW": if (pause) if (!astats) screenshot(); break;
     case "KeyE": if (pause) fullScreen(document.documentElement); break;
     case "KeyR": if (pause && !astats) restart(); break;
-    case "KeyT": if (pause) timer(); break;
+    case "KeyT": if (pause) stimer(); break;
     case "KeyF": if (astats) sscreenshot(); break;
     case "ArrowLeft": sleft(); break;
     case "ArrowRight": sright(); break;

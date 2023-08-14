@@ -4,13 +4,17 @@
 const $ = id => document.getElementById(id);
 const $hide = id => $(id).style.display = 'none';
 const $show = id => $(id).style.display = 'block';
+const $showi = id => $(id).style.display = 'inline';
 const $create = type => document.createElement(type);
 const $add = (id, html) => $(id).innerHTML += html;
 
 const PI = Math.PI; //Число "π"
 
 //Случайные числа:
-const rnd = () => Math.random();
+const rnd = () => {
+  counters.randoms++;
+  return Math.random();
+};
 const random = max => rnd()*max;
 const rand = (min, max) => random(max-min)+min;
 
@@ -20,8 +24,7 @@ const flr = x => floor(x, 1)%1 ? floor(x, 1).toString():floor(x, 1)+".0"; //Ок
 const dfloor = (x, d) => Math.floor(x/d)*d; //Округление вниз до точности d
 const dceil = (x, d) => Math.ceil(x/d)*d; //Округление вверх до точности d
 
-//HEX:
-function hex(x) {
+function hex(x) { //HEX
   x = Math.min(Math.max(Math.floor(x), 0), 255);
   const h = x.toString(16);
   return x < 16 ? "0"+h:h;
@@ -55,17 +58,7 @@ function download(url, name) { //Метод скачивания файла
 }
 
 async function wakelock() { //Метод отключения затемнения экрана
-  if (navigator.wakeLock) {
-    let o = await navigator.wakeLock.request("screen"); //Отключение затемнения экрана
-    
-    o.addEventListener('release', function() { //Если отключение отмененено
-      o = null;
-    });
-    
-    document.addEventListener("visibilitychange", async function() { //Повторная блокировка
-      if (o && document.visibilityState === "visible") wakelock();
-    });
-  }
+  if (navigator.wakeLock) navigator.wakeLock.request("screen");
 }
 
 function sgraph(data, x, y, w, h, s, m) { //Метод прямоугольного графика
@@ -151,7 +144,7 @@ function sgraph(data, x, y, w, h, s, m) { //Метод прямоугольно�
     }
   }
   
-  if (s) if (s.x > x+w/8 && s.x <= x+w/8*7 && s.y > y+h/8 && s.y <= y+h/8*7) { //Отрисовка выделения:
+  if (s) if (s.x > x+w/8 && s.x <= x+w/8*7 && s.y > y+h/8 && s.y <= y+h/8*7) { //Отрисовка выделения
     ctx.strokeStyle = "#a0000080";
     ctx.lineWidth = S(2);
     ctx.beginPath();
