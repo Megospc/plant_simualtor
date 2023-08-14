@@ -10,7 +10,7 @@
     "size": 28,
     "gsize": 15,
     "flycount": 100,
-    "flych": 0.1,
+    "flych": 0.01,
     "flymul": 0.02,
     "flyspeed": 5,
     "flymax": 1000,
@@ -235,7 +235,11 @@
       "fvalue": 50,
       "airblue": -8,
       "airred": 8,
-      "airnblue": 10000
+      "airnblue": 10000,
+      "division": 0.1,
+      "divzone": 50,
+      "hide": 3000,
+      "hideprob": 0.01
     },
     {
       "name": "хищники",
