@@ -22,7 +22,7 @@
 
 "use strict";
 
-const version = "1.7.6"; //Версия программы
+const version = "1.7.7"; //Версия программы
 const fps = 30; //Количество кадров в секунду
 const fpsTime = 1000/fps; //Миллисекунд на кадр
 const font = "Monospace"; //Шрифт текста
@@ -2309,8 +2309,8 @@ function mousemove(e) { //Движение мышью
   if (!started) return;
   
   //Получение координат мыши:
-  const x = (e.pageX-cprops.left)/cprops.width*900;
-  const y = (e.pageY-cprops.top)/cprops.height*450;
+  const x = ((e.pageX ?? e.touches[0].pageX)-cprops.left)/cprops.width*900;
+  const y = ((e.pageY ?? e.touches[0].pageY)-cprops.top)/cprops.height*450;
   
   if (mods.add && x >= 15 && x < 435 && y >= 15 && y < 435) cadd(x, y); //Модификация "Добавка"
   
@@ -2350,7 +2350,12 @@ window.onload = function() {
   if (ejson) sessionStorage.setItem('plant_simulator_json', ""); //Очистка JSON
   wakelock();
   document.addEventListener('click', click); //Объявление обработчика кликов
-  document.addEventListener('ontouchmove' in document ? 'touchmove':'mousemove', mousemove); //Объявление обработчика движения мышью
+  
+  //Объявление обработчика движения мышью:
+  if ('ontouchmove' in document) {
+    document.addEventListener('touchstart', mousemove);
+    document.addEventListener('touchmove', mousemove);
+  } else document.addEventListener('mousemove', mousemove);
   
   //Объявление обработчиков клавиш:
   document.addEventListener('keydown', keydown);
