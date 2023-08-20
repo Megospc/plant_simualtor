@@ -22,7 +22,7 @@
 
 "use strict";
 
-const version = "1.6.4"; //Версия программы
+const version = "1.7.6"; //Версия программы
 const fps = 30; //Количество кадров в секунду
 const fpsTime = 1000/fps; //Миллисекунд на кадр
 const font = "Monospace"; //Шрифт текста
@@ -338,6 +338,8 @@ const funguses = obj.funguses ?? []; //Массив видов грибов
 const canvas = $('canvas'); //Объект холста
 const ctx = canvas.getContext('2d'); //Контекст холста
 const music = new Audio("assets/music"+(options.musictype ?? 0)+".mp3"); //Музыка (от zvukipro.com)
+var RANDOM; //Случайные числа
+var rseed; //Случачайное семя
 var frame; //Счётчик кадров
 var arr; //Массив объектов
 var ground; //Массив земли
@@ -345,7 +347,7 @@ var scale; //Масштаб поля
 var cscale; //Масштаб холста
 var started = false; //Запущенна ли симуляция?
 var astats = 0; //Лист расширенной статистики
-var arendered = 0; //Отрисованный лист
+var arendered = false; //Отрисованный лист
 var lastFrame; //Последний кадр
 var sorted; //Массив отсортированной статистики
 var stats; //Массив сохранённой статистики
@@ -359,15 +361,10 @@ var mods; //Объект модификаций
 var ptime; //Время на расчёт
 var timer; //Таймер
 const S = x => x*cscale; //Функция масштабирования холста
-const theme = { //Цветовая тема
-  back: "#ffffff",
-  elements: "#d0d0d0",
-  text: "#000000"
-};
 const timeNow = () => frame*fpsTime; //Функция игрового времени
 
 function clear() { //Метод очистки холста
-  ctx.fillStyle = theme.back;
+  ctx.fillStyle = "#ffffff";
   ctx.fillRect(0, 0, canvas.width, canvas.height);
 }
 
@@ -433,31 +430,17 @@ function sort(id = "count") { //Метод сортировки статисти
   if (counters.fire.history) sorted.push({ state: { color: style.firecolor, name: "пожар" }, counter: counters.fire, type: "fire" }); //Добавление огня
   if (counters.water.history) sorted.push({ state: { color: style.waterstcolor, name: "наводнение" }, counter: counters.water, type: "water" }); //Добавление огня
   
-  if (style.sort) { //Сортировка
-    for (let j = 0; j < sorted.length-1; j++) {
-      let m = sorted[j];
-      let k = j;
-      for (let i = j; i < sorted.length; i++) {
-        const p = sorted[i];
-        if (p.counter[id] > m.counter[id]) {
-          k = i;
-          m = p;
-        }
-      }
-      sorted[k] = sorted[j];
-      sorted[j] = m;
-    }
-  }
+  if (style.sort) sorted.sort((a, b) => a.counter[id] > b.counter[id] ? -1:1); //Сортировка
 }
 
-function graph(size, x, y, s, m) { //Отрисовка графиков
+function graph(size, x, y, s, m, c, l, j) { //Отрисовка графиков
   //Массивы информации:
   const p = stats.plants.map((x, i) => ({ arr: x, state: plants[i] })); //Растения
   const a = stats.animals.map((x, i) => ({ arr: x, state: animals[i] })); //Животные
   const f = stats.funguses.map((x, i) => ({ arr: x, state: funguses[i] })); //Грибы
   const data = p.concat(a).concat(f);
   
-  sgraph(data.length ? data:[{ arr: new Array(frame).fill(0), state: { color: "#00000000" } }], x, y, size, size/2, s, m ?? style.graphmove);
+  sgraph(data.length ? data:[{ arr: new Array(frame).fill(0), state: { color: "#00000000" } }], x, y, size, size/2, s, m ?? style.graphmove, c, l, j);
 }
 
 function resize() { //Метод изменения размера холста
@@ -582,6 +565,7 @@ function consair(s, m = 1) { //Функция потребления газов
       }
     }
     if (counters.air.red < s.airnred) if (!prob(s.aair)) return false; //Если не достаточно
+    if (s.airdred) if (counters.air.red > s.airdred) if (!prob(s.aair)) return false; //Если слишком много
   }
   if (options.airgreen) { //Метан
     if (s.airgreen) {
@@ -592,6 +576,7 @@ function consair(s, m = 1) { //Функция потребления газов
       }
     }
     if (counters.air.green < s.airngreen) if (!prob(s.aair)) return false; //Если не достаточно
+    if (s.airdgreen) if (counters.air.green > s.airdgreen) if (!prob(s.aair)) return false; //Если слишком много
   }
   if (options.airblue) { //Кислород
     if (s.airblue) {
@@ -602,6 +587,7 @@ function consair(s, m = 1) { //Функция потребления газов
       }
     }
     if (counters.air.blue < s.airnblue) if (!prob(s.aair)) return false; //Если не достаточно
+    if (s.airdblue) if (counters.air.blue > s.airdblue) if (!prob(s.aair)) return false; //Если слишком много
   }
 
   return true;
@@ -614,7 +600,7 @@ class Ground { //Класс земли
     this.g = options.ggreen;
     this.b = options.gblue;
     
-    if (prob(options.iwater)) { //Наводнение
+    if (options.water && prob(options.iwater)) { //Наводнение
       this.water = true;
       
       //Обновление счётчиков:
@@ -654,12 +640,12 @@ class Ground { //Класс земли
   handler() { //Метод обработчика
     //Обработка наводнения:
     if (this.water) {
-      if (prob(options.awater)) {
+      if (options.awater && prob(options.awater)) {
         this.water = false;
         counters.water.count--; //Обновление счётчика
       }
     } else {
-      if (prob(options.water)) {
+      if (options.water && prob(options.water)) {
         this.water = true;
         
         //Обновление счётчиков:
@@ -699,7 +685,10 @@ class Fire { //Класс огоньков
     this.y = y;
     
     this.time = timeNow(); //Время появления
-    this.anim = { now: 128, next: rand(style.fireanimmin, style.fireanimmax) }; //Анимация
+    this.anim = { //Анимация
+      now: 128,
+      next: rand(style.fireanimmin, style.fireanimmax)
+    };
     
     this.id = register(this, "fire"); //Регистрация огня
     
@@ -756,9 +745,10 @@ class Fire { //Класс огоньков
       ctx.fillStyle = style.firecolor+hex(this.anim.now);
       fig.call(this, anim);
       
-      //Изменение альфа-канала:
-      this.anim.now = this.anim.now+(this.anim.next-this.anim.now)*style.fireanimc;
-      if (frame%style.fireanimr == 0) this.anim.next = rand(style.fireanimmin, style.fireanimmax);
+      if (!pause) { //Изменение альфа-канала:
+        this.anim.now = this.anim.now+(this.anim.next-this.anim.now)*style.fireanimc;
+        if (frame%style.fireanimr == 0) this.anim.next = rand(style.fireanimmin, style.fireanimmax);
+      }
     }
   }
 }
@@ -877,6 +867,7 @@ class Animal { //Класс животных
   init() { //Метод инициализации
     const state = animals[this.state]; //Вид животного
     this.hungry = state.hungry; //Запас очков сытости
+    if (state.timemin && state.timemax) this.time = timeNow()+rand(state.timemin, state.timemax); //Свойство "Старость"
     
     //Обновление счётчиков:
     counters.animals[this.state].count++;
@@ -973,6 +964,8 @@ class Animal { //Класс животных
       this.hide = timeNow()+state.hide;
       this.anim(300);
     }
+    
+    if (this.time) if (timeNow() > this.time) return void this.dead(); //Свойство "Старость"
     
     if (state.sleprob && state.sleep && state.slezone) forall(this, ["animal"], function(p, o, s) { //Свойство "Гипноз"
       if (o.state == this.state) return; //Если животное того же вида — пропустить
@@ -1260,8 +1253,24 @@ class Mycelium { //Класс грибниц
   render() {
     if (style.funga) {
       const state = funguses[this.state]; //Вид грибницы
+      const fsize = options.size*options.gsize; //Полный размер
+      const f = x => Math.min(Math.max(x, 0), fsize);
+      const h = this.grow/2;
+      const x = this.x;
+      const y = this.y;
       ctx.fillStyle = state.color+hex(style.funga);
-      ctx.fillRect(S((this.x-this.grow/2)*scale+15), S((this.y-this.grow/2)*scale+15), S(this.grow*scale), S(this.grow*scale));
+      
+      function draw(x0, y0, x1, y1) {
+        ctx.beginPath();
+        ctx.moveTo(S(f(x0)*scale+15), S(f(y0)*scale+15));
+        ctx.lineTo(S(f(x1)*scale+15), S(f(y0)*scale+15));
+        ctx.lineTo(S(f(x1)*scale+15), S(f(y1)*scale+15));
+        ctx.lineTo(S(f(x0)*scale+15), S(f(y1)*scale+15));
+        ctx.closePath();
+        ctx.fill();
+      }
+      
+      draw(x-h, y-h, x+h, y+h);
     }
   }
 }
@@ -1446,7 +1455,7 @@ class Plant { //Класс растений
       fig.call(this, anim);
     }
   }
-  fruits() { //Метод разброса фруктов
+  fruits() { //Метод разброса семян
     const state = plants[this.state]; //Вид растения
     const fruits = Math.floor(rand(state.fruitsmin, state.fruitsmax));
     
@@ -1463,11 +1472,16 @@ class Plant { //Класс растений
   }
 }
 
-function start() { //Метод инициализации
+function start(seed) { //Метод инициализации
+  //Случайные числа:
+  rseed = seed ?? (Math.random()*99999+1);
+  rseed = Math.floor(rseed);
+  RANDOM = randf(rseed);
+  
   frame = 0; //Сброс счётчика
   lastFrame = performance.now(); //Сброс последнего кадра
   time = 0; //Сброс реального времени
-  ptime = fpsTime; //Сброс времени на расчёт
+  ptime = fpsTime/options.showspeed; //Сброс времени на расчёт
   stime = performance.now(); //Сохранение текущего времени
   timer = 0; //Сброс таймера
   arr = []; //Очистка массива объектов
@@ -1477,6 +1491,11 @@ function start() { //Метод инициализации
   
   stats = { //Очистка сохранённой статистики
     air: {
+      red: [],
+      green: [],
+      blue: []
+    },
+    ground: {
       red: [],
       green: [],
       blue: []
@@ -1499,6 +1518,11 @@ function start() { //Метод инициализации
       green: options.airgreen,
       blue: options.airblue
     },
+    ground: {
+      red: options.airred,
+      green: options.airgreen,
+      blue: options.airblue
+    },
     fly: { count: 0, history: 0 },
     fire: { count: 0, history: 0 },
     water: { count: 0, history: 0 },
@@ -1511,7 +1535,8 @@ function start() { //Метод инициализации
   
   mods = { //Установка модификаций
     add: false,
-    draw: false
+    draw: false,
+    cblock: false
   };
   
   //Инициализация земли:
@@ -1545,11 +1570,11 @@ function start() { //Метод инициализации
     for (let i = 0; i < state.initial; i++) new Mycelium(j); //Создание грибниц
   }
   
-  for (let i = 0; i < (options.flycount); i++) new Fly(); //Инициализация мух
+  for (let i = 0; i < options.flycount; i++) new Fly(); //Инициализация мух
   
   sort(); //Сортировка
   
-  interval = setInterval(frame_, fpsTime/(options.showspeed ?? 1)); //Установка интервала
+  interval = setInterval(frame_, fpsTime/options.showspeed); //Установка интервала
 }
 
 function frame_() { //Метод кадра
@@ -1567,10 +1592,10 @@ function frame_() { //Метод кадра
   if (mods.draw) return; //Остановка при рисовании
   
   if (astats) { //Расширенная статистика
-    if (arendered == astats) return; //Если уже отрисованно — пропустить
+    if (arendered) return; //Если уже отрисованно — пропустить
     
     clear();
-    ctx.fillStyle = theme.elements;
+    ctx.fillStyle = "#d0d0d0";
     ctx.beginPath();
     ctx.moveTo(S(45), S(20));
     ctx.lineTo(S(20), S(35));
@@ -1652,7 +1677,7 @@ function frame_() { //Метод кадра
           ctx.fillText("График:", S(450), S(30));
           ctx.textAlign = "left";
           
-          graph(860, 20, 20, mods.stats, false);
+          graph(860, 20, 20, mods.stats, false, mods.crop, mods.start, mods.max);
         }
         break;
       case 4:
@@ -1665,17 +1690,17 @@ function frame_() { //Метод кадра
           ctx.fillText("Мухи:", S(235), S(60));
           ctx.fillText("Пожар:", S(655), S(60));
           ctx.fillText("Наводнение:", S(235), S(260));
-          ctx.fillText("Атмосфера:", S(655), S(260));
+          ctx.fillText("Минералы:", S(655), S(260));
           ctx.textAlign = "left";
           
-          sgraph([{ arr: stats.fly, state: { color: style.flycolor } }], 50, 60, 350, 175, mods.stats);
-          sgraph([{ arr: stats.fire, state: { color: style.firecolor } }], 470, 60, 350, 175, mods.stats);
-          sgraph([{ arr: stats.water, state: { color: style.waterstcolor } }], 50, 260, 350, 175, mods.stats);
+          sgraph([{ arr: stats.fly, state: { color: style.flycolor } }], 50, 60, 350, 175, mods.stats, false, mods.crop, mods.start, mods.max);
+          sgraph([{ arr: stats.fire, state: { color: style.firecolor } }], 470, 60, 350, 175, mods.stats, false, mods.crop, mods.start, mods.max);
+          sgraph([{ arr: stats.water, state: { color: style.waterstcolor } }], 50, 260, 350, 175, mods.stats, false, mods.crop, mods.start, mods.max);
           sgraph([
-            { arr: stats.air.red, state: { color: "#a00000" } },
-            { arr: stats.air.green, state: { color: "#00a000" } },
-            { arr: stats.air.blue, state: { color: "#0000a0" } }
-          ], 470, 260, 350, 175, mods.stats);
+            { arr: stats.ground.red, state: { color: "#a00000" } },
+            { arr: stats.ground.green, state: { color: "#00a000" } },
+            { arr: stats.ground.blue, state: { color: "#0000a0" } }
+          ], 470, 260, 350, 175, mods.stats, false, mods.crop, mods.start, mods.max);
         }
         break;
       case 5:
@@ -1686,30 +1711,25 @@ function frame_() { //Метод кадра
           ctx.fillText("Состояние земли:", S(450), S(30));
           ctx.textAlign = "left";
           
-          let r = 0, g = 0, b = 0; //Количество минералов
-          
-          //Подсчёт минералов:
-          for (let x = 0; x < options.size; x++) for (let y = 0; y < options.size; y++) {
-            const gnd = ground[x][y];
-            r += gnd.r;
-            g += gnd.g;
-            b += gnd.b;
-          }
+          //Количество минералов:
+          const r = counters.ground.red;
+          const g = counters.ground.green;
+          const b = counters.ground.blue;
           
           //Отрисовка количества минералов:
           ctx.font = S(18)+"px "+font;
           ctx.fillStyle = "#a00000";
-          ctx.fillText(Math.floor(r)+" | красный", S(80), S(80), S(380));
+          ctx.fillText(numstr(r)+" | красный", S(80), S(80), S(380));
           ctx.fillStyle = "#00a000";
-          ctx.fillText(Math.floor(g)+" | зелёный", S(80), S(110), S(380));
+          ctx.fillText(numstr(g)+" | зелёный", S(80), S(110), S(380));
           ctx.fillStyle = "#0000a0";
-          ctx.fillText(Math.floor(b)+" | синий", S(80), S(140), S(380));
+          ctx.fillText(numstr(b)+" | синий", S(80), S(140), S(380));
           
           //Отрисовка суммарного состояния:
           ctx.font = S(24)+"px "+font;
           ctx.fillStyle = "#000000";
           const c = options.size**2;
-          ctx.fillText(flr((r+g+b)/(options.gred+options.ggreen+options.gblue)/c*100)+"%", S(80), S(170), S(380));
+          ctx.fillText(flr((r+g+b)/Math.max(options.gred+options.ggreen+options.gblue, 1)/c*100)+"%", S(80), S(170), S(380));
           
           //Отрисовка "Карты минералов":
           const f = (x, m) => hex(x/m*128+127);
@@ -1718,6 +1738,20 @@ function frame_() { //Метод кадра
             const gnd = ground[x][y];
             ctx.fillStyle = "#"+f(gnd.r, options.gred)+f(gnd.g, options.ggreen)+f(gnd.b, options.gblue);
             ctx.fillRect(S(80+x*s), S(200+y*s), S(s), S(s));
+          }
+          
+          //Обработка выделения:
+          const d = mods.stats;
+          if (d) if (d.x >= 80 && d.x < 280 && d.y >= 200 && d.y < 400) {
+            const g = ground[Math.floor((d.x-80)/s)][Math.floor((d.y-200)/s)];
+            ctx.textAlign = "center";
+            ctx.font = S(8)+"px "+font;
+            ctx.shadowColor = "#000000";
+            ctx.shadowBlur = S(5);
+            ctx.fillStyle = "#ffffff";
+            ctx.fillText(flr((g.r+g.g+g.b)/(options.gred+options.ggreen+options.gblue)*100, 100)+"%", S(d.x), S(d.y-8));
+            ctx.shadowBlur = 0;
+            ctx.textAlign = "left";
           }
           
           rgraph([
@@ -1740,24 +1774,27 @@ function frame_() { //Метод кадра
           //Отрисовка количества газов:
           ctx.font = S(18)+"px "+font;
           ctx.fillStyle = "#a00000";
-          ctx.fillText(Math.floor(r)+" | углекислый газ", S(80), S(80), S(380));
+          ctx.fillText(numstr(r)+" | углекислый газ", S(80), S(80), S(380));
           ctx.fillStyle = "#00a000";
-          ctx.fillText(Math.floor(g)+" | метан", S(80), S(110), S(380));
+          ctx.fillText(numstr(g)+" | метан", S(80), S(110), S(380));
           ctx.fillStyle = "#0000a0";
-          ctx.fillText(Math.floor(b)+" | кислород", S(80), S(140), S(380));
-          ctx.fillStyle = "#c0c0c0";
-          ctx.fillText(Math.floor(options.airwhite)+" | азот", S(80), S(170), S(380));
+          ctx.fillText(numstr(b)+" | кислород", S(80), S(140), S(380));
           
           //Отрисовка суммарного состояния:
           ctx.font = S(24)+"px "+font;
           ctx.fillStyle = "#000000";
-          ctx.fillText(flr((r+g+b)/(options.airred+options.airgreen+options.airblue)*100)+"%", S(80), S(200), S(380));
+          ctx.fillText(flr((r+g+b)/Math.max(options.airred+options.airgreen+options.airblue, 1)*100)+"%", S(80), S(170), S(380));
+          
+          sgraph([
+            { arr: stats.air.red, state: { color: "#a00000" } },
+            { arr: stats.air.green, state: { color: "#00a000" } },
+            { arr: stats.air.blue, state: { color: "#0000a0" } }
+          ], 50, 240, 350, 175, mods.stats, false, mods.crop, mods.start, mods.max);
           
           rgraph([
             { state: { color: "#a00000", name: "углекислый газ" }, value: r },
             { state: { color: "#00a000", name: "метан" }, value: g },
-            { state: { color: "#0000a0", name: "кислород" }, value: b },
-            { state: { color: "#c0c0c0", name: "азот" }, value: options.airwhite }
+            { state: { color: "#0000a0", name: "кислород" }, value: b }
           ], 700, 225, 150, mods.stats);
         }
         break;
@@ -1775,8 +1812,9 @@ function frame_() { //Метод кадра
           ctx.fillText("Реальное время: "+floor(time/1000, 3)+"с", S(20), S(170), S(860));
           ctx.fillText("Средний расчёт: "+floor(time/frame, 2)+"мс", S(20), S(200), S(860));
           ctx.fillText("Количество ячеек: "+arr.length, S(20), S(230), S(860));
-          ctx.fillText("Количество случайных чисел: "+counters.randoms, S(20), S(260), S(860));
-          ctx.fillText("Количество добавок кликом: "+counters.clicks, S(20), S(290), S(860));
+          ctx.fillText("Количество случайных чисел: "+numstr(counters.randoms), S(20), S(260), S(860));
+          ctx.fillText("Случайное семя: "+rseed, S(20), S(290), S(860));
+          ctx.fillText("Количество добавок кликом: "+counters.clicks, S(20), S(320), S(860));
         }
         break;
       case 8:
@@ -1793,23 +1831,23 @@ function frame_() { //Метод кадра
           sgraph([
             { arr: stats.perf.time, state: { color: "#000000" } },
             { arr: new Array(stats.perf.time.length).fill(fpsTime/(options.showspeed ?? 1)), state: { color: "#00a00080" } }
-          ], 20, 120, 430, 215, mods.stats);
+          ], 20, 120, 430, 215, mods.stats, false, mods.crop, mods.start, mods.max);
           sgraph([
             { arr: stats.perf.len, state: { color: "#000000" } },
             { arr: stats.perf.sum, state: { color: "#00a00080" } }
-          ], 470, 120, 430, 215, mods.stats);
+          ], 470, 120, 430, 215, mods.stats, false, mods.crop, mods.start, mods.max);
         }
         break;
     }
-    arendered = astats;
+    arendered = true;
     
     //Кнопка "Скриншот":
-    ctx.fillStyle = theme.elements;
+    ctx.fillStyle = "#d0d0d0";
     ctx.fillRect(S(850), S(405), S(30), S(20));
     ctx.fillRect(S(870), S(400), S(5), S(5));
-    ctx.fillStyle = theme.back;
+    ctx.fillStyle = "#ffffff";
     ctx.fillRect(S(860), S(410), S(10), S(10));
-    ctx.fillStyle = theme.elements;
+    ctx.fillStyle = "#d0d0d0";
     ctx.fillRect(S(863), S(413), S(4), S(4));
     return;
   }
@@ -1828,7 +1866,22 @@ function frame_() { //Метод кадра
     
     //Расчёт суммарной популяции:
     let sum = 0;
-    for (let i = 0; i < sorted.length; i++) if (!sorted[i].type != "water") sum += sorted[i].counter.count;
+    for (let i = 0; i < sorted.length; i++) if (!sorted[i].type != "water") {
+      sum += sorted[i].counter.count;
+      sum += sorted[i].counter.eggs ?? 0;
+      sum += sorted[i].counter.fruits ?? 0;
+    }
+    
+    //Подсчёт минералов:
+    counters.ground.red = 0;
+    counters.ground.green = 0;
+    counters.ground.blue = 0;
+    for (let x = 0; x < options.size; x++) for (let y = 0; y < options.size; y++) {
+      const gnd = ground[x][y];
+      counters.ground.red += gnd.r;
+      counters.ground.green += gnd.g;
+      counters.ground.blue += gnd.b;
+    }
     
     //Сохранение производительности:
     stats.perf.len.push(arr.length);
@@ -1845,7 +1898,12 @@ function frame_() { //Метод кадра
     stats.air.green.push(counters.air.green);
     stats.air.blue.push(counters.air.blue);
     
-    if (prob(options.flyadd)) for (let i = 0; i < (options.flyaddc ?? 1) && counters.fly.count < options.flymax; i++) new Fly(); //Добавка мух
+    //Сохранение минералов:
+    stats.ground.red.push(counters.ground.red);
+    stats.ground.green.push(counters.ground.green);
+    stats.ground.blue.push(counters.ground.blue);
+    
+    if (options.flyadd && prob(options.flyadd)) for (let i = 0; i < options.flyaddc && counters.fly.count < options.flymax; i++) new Fly(); //Добавка мух
     for (let i = 0; i < arr.length; i++) if (arr[i].avail) arr[i].obj.handler(); //Обработка объектов
     for (let x = 0; x < options.size; x++) for (let y = 0; y < options.size; y++) ground[x][y].handler(); //Обработка земли
   }
@@ -1853,7 +1911,6 @@ function frame_() { //Метод кадра
   while (arr.length && !arr[arr.length-1].avail) arr.pop(); //Очистка массива
   
   clear();
-  ctx.textBaseline = "middle";
   if (style.ground) for (let x = 0; x < options.size; x++) for (let y = 0; y < options.size; y++) ground[x][y].render(x*options.gsize*scale+15, y*options.gsize*scale+15, options.gsize*scale, options.gsize*scale); //Отрисовка земли
   for (let i = 0; i < arr.length; i++) if (arr[i].avail) arr[i].obj.render(); //Отрисовка объекто
   
@@ -1872,7 +1929,7 @@ function frame_() { //Метод кадра
   }
   
   //Отрисовка "бортиков":
-  ctx.fillStyle = theme.elements;
+  ctx.fillStyle = "#d0d0d0";
   ctx.fillRect(0, 0, S(450), S(15));
   ctx.fillRect(0, S(435), S(450), S(15));
   ctx.fillRect(0, 0, S(15), S(450));
@@ -1884,7 +1941,7 @@ function frame_() { //Метод кадра
       
       //Отрисовка статистики:
       const size = Math.min(140/sorted.length, 18); //Размер текста
-      ctx.fillStyle = theme.text;
+      ctx.fillStyle = "#000000";
       ctx.font = S(18)+"px "+font;
       ctx.fillText("Статистика:", S(490), S(120))
       ctx.font = S(size)+"px "+font;
@@ -1905,7 +1962,7 @@ function frame_() { //Метод кадра
       graph(200, 670, 10); //Стандартный график
     } else graph(420, 470, 10); //Большой график
     
-    ctx.fillStyle = theme.text;
+    ctx.fillStyle = "#000000";
     ctx.font = S(18)+"px "+font;
     
     //Расчёт суммарной популяции:
@@ -1916,7 +1973,7 @@ function frame_() { //Метод кадра
     
     //Отрисовка мини-статистики:
     ctx.fillText("Время: "+flr(timeNow()/1000)+"с", S(490), S(style.biggraph ? 260:30), S(style.biggraph ? 400:180)); //Игровое время
-    ctx.fillText("FPS: "+flr(FPS)+" x"+(options.showspeed ?? 1), S(490), S(style.biggraph ? 290:60), S(style.biggraph ? 400:180)); //Текущее количество кадров в секунду
+    ctx.fillText("FPS: "+flr(FPS)+" x"+options.showspeed, S(490), S(style.biggraph ? 290:60), S(style.biggraph ? 400:180)); //Текущее количество кадров в секунду
     
     const pt = performance.now()-lastFrame; //Расчёт
     ctx.fillText("Расчёт: "+Math.floor(pt)+"мс", S(490), S(style.biggraph ? 320:90), S(style.biggraph ? 400:180)); //Время на расчёт кадра
@@ -1924,7 +1981,7 @@ function frame_() { //Метод кадра
   }
   
   if (pause) { //Отрисовка меню возможностей
-    ctx.fillStyle = theme.elements;
+    ctx.fillStyle = "#d0d0d0";
     
     //Кнопка "Продолжить":
     ctx.beginPath();
@@ -1936,10 +1993,10 @@ function frame_() { //Метод кадра
     
     //Кнопка "Заново":
     ctx.fillRect(S(800), S(400), S(30), S(30));
-    ctx.fillStyle = theme.back;
+    ctx.fillStyle = "#ffffff";
     ctx.fillRect(S(807), S(407), S(16), S(16));
     ctx.fillRect(S(820), S(415), S(16), S(20));
-    ctx.fillStyle = theme.elements;
+    ctx.fillStyle = "#d0d0d0";
     ctx.beginPath();
     ctx.moveTo(S(834), S(410));
     ctx.lineTo(S(826), S(420));
@@ -1977,9 +2034,9 @@ function frame_() { //Метод кадра
     //Кнопка "Скриншот":
     ctx.fillRect(S(720), S(405), S(30), S(20));
     ctx.fillRect(S(740), S(400), S(5), S(5));
-    ctx.fillStyle = theme.back;
+    ctx.fillStyle = "#ffffff";
     ctx.fillRect(S(730), S(410), S(10), S(10));
-    ctx.fillStyle = theme.elements;
+    ctx.fillStyle = "#d0d0d0";
     ctx.fillRect(S(733), S(413), S(4), S(4));
     
     //Кнопка "Статистика":
@@ -1990,19 +2047,33 @@ function frame_() { //Метод кадра
     
     //Кнопка "Таймер":
     ctx.beginPath();
-    ctx.arc(S(655), S(415), S(12), 0, PI*2);
+    ctx.arc(S(657), S(415), S(12), 0, PI*2);
     ctx.fill();
-    ctx.fillRect(S(652), S(400), S(6), S(10));
-    ctx.fillStyle = theme.back;
+    ctx.fillRect(S(654), S(400), S(6), S(10));
+    ctx.fillStyle = "#ffffff";
     ctx.beginPath();
-    ctx.arc(S(655), S(415), S(9), 0, PI*2);
+    ctx.arc(S(657), S(415), S(9), 0, PI*2);
     ctx.fill();
-    ctx.fillStyle = timer ? "#d08080":theme.elements;
-    ctx.fillRect(S(654), S(413), S(7), S(2));
-    ctx.fillRect(S(654), S(408), S(2), S(7));
+    ctx.fillStyle = timer ? "#d08080":"#d0d0d0";
+    ctx.fillRect(S(656), S(413), S(7), S(2));
+    ctx.fillRect(S(656), S(408), S(2), S(7));
+    ctx.fillStyle = "#d0d0d0";
+    
+    //Кнопка "Семя":
+    ctx.beginPath();
+    ctx.arc(S(617), S(415), S(12), 0, PI*2);
+    ctx.fill();
+    ctx.fillRect(S(614), S(400), S(6), S(10));
+    ctx.fillRect(S(614), S(421), S(6), S(10));
+    ctx.fillRect(S(602), S(412), S(10), S(6));
+    ctx.fillRect(S(622), S(412), S(10), S(6));
+    ctx.fillStyle = "#ffffff";
+    ctx.beginPath();
+    ctx.arc(S(617), S(415), S(8), 0, PI*2);
+    ctx.fill();
   } else {
     //Кнопка "Пауза":
-    ctx.fillStyle = theme.elements;
+    ctx.fillStyle = "#d0d0d0";
     ctx.fillRect(S(850), S(400), S(10), S(30));
     ctx.fillRect(S(870), S(400), S(10), S(30));
     
@@ -2010,18 +2081,35 @@ function frame_() { //Метод кадра
   }
 }
 
+function srand() { //Установка семени
+  const r = pnum("Введите семя:", 0, 100000);
+  if (r) restart(r);
+}
+
+function gcancel() { //Сброс
+  mods.crop = null;
+  mods.start = null;
+  mods.max = null;
+  arendered = false;
+}
+function gcrop() { //Обрезка графика
+  const r = pnum("Введите конец обрезки:", 0, frame/fps);
+  mods.crop = r === null ? null:r*fps;
+  arendered = false;
+}
+function gstart() { //Начало графика
+  const r = pnum("Введите начало обрезки:", 0, frame/fps);
+  mods.start = r === null ? null:r*fps;
+  arendered = false;
+}
+function gup() { //Максимальный график
+  mods.max = pnum("Введите максимальное значение:", 2, Infinity);
+  arendered = false;
+}
+
 function stimer() { //Метод таймера
-  const str = prompt("Введите длину таймера:", ""); //Строка длины
-  const len = +str; //Число длины
-  
-  if (str === null) { //Если длина не введена
-    //Сброс таймера:
-    timer = 0;
-    return;
-  }
-  if (isNaN(len) || len <= 0) return; //Если длина не правильная
-  
-  timer = timeNow()+len*1000;
+  const r = pnum("Введите длину таймера:", 0, Infinity);
+  timer = r === null ? 0:timeNow()+r*1000;
 }
 
 function screenshot() { //Метод скришота
@@ -2033,10 +2121,10 @@ function screenshot() { //Метод скришота
   scr.putImageData(ctx.getImageData(0, 0, canvas.width, canvas.height), 0, 0);
   
   //Изменение изображения (нанесение водяного знака):
-  scr.fillStyle = theme.back;
+  scr.fillStyle = "#ffffff";
   scr.fillRect(S(590), S(400), S(310), S(50));
   scr.font = S(24)+"px "+font;
-  scr.fillStyle = theme.text;
+  scr.fillStyle = "#000000";
   scr.fillText("Plant Simulator", S(630), S(430));
   
   const url = s.toDataURL('image/png'); //Получение base64-изображения
@@ -2051,37 +2139,56 @@ function sscreenshot() { //Метод скришота статистики
   scr.putImageData(ctx.getImageData(0, 0, canvas.width, canvas.height), 0, 0);
   
   //Изменение изображения (нанесение водяного знака):
-  scr.fillStyle = theme.back;
+  scr.fillStyle = "#ffffff";
   scr.fillRect(S(850), S(400), S(50), S(25));
   scr.fillRect(S(850), S(0), S(50), S(50));
   scr.fillRect(S(0), S(0), S(50), S(50));
   scr.font = S(18)+"px "+font;
-  scr.fillStyle = theme.text;
+  scr.fillStyle = "#000000";
   scr.fillText("Plant Simulator", S(700), S(30));
   
   const url = s.toDataURL('image/png'); //Получение base64-изображения
   download(url, `plant_simulator_screenshot_${obj.name}.png`); //Скачивание изображения
 }
 
+function sspeed() {
+  const r = pnum("Введите скорость:", 0.001, 10);
+  if (r !== null) {
+    options.showspeed = r;
+    clearInterval(interval);
+    interval = setInterval(frame_, fpsTime/options.showspeed);
+  }
+}
+
 //Передвижения по расширенной статистике:
 function sleft() { //Влево
+  arendered = false;
   astats--;
   if (!astats) {
-    arendered = 0;
     mods.stats = null;
+    gcancel();
   }
 }
 function sright() { //Вправо
   if (astats < 8) {
+    arendered = false;
     astats++;
     return true;
   }
   return false;
 }
 
-function restart() { //Перезапуск симуляции
+function restart(seed) { //Перезапуск симуляции
   clearInterval(interval);
-  start();
+  start(seed);
+}
+
+function cadd(x, y) { //Добавкка кликом
+  if (mods.cblock) return; //Блокировка добавок
+  
+  const gnd = ground[Math.floor((x-15)/scale/options.gsize)][Math.floor((y-15)/scale/options.gsize)];
+  gnd.click();
+  counters.clicks++;
 }
 
 function click(e) { //Обработчик кликов
@@ -2141,12 +2248,14 @@ function click(e) { //Обработчик кликов
     vib(100);
     stimer();
   }
+  if (pause && x > 600 && x < 630 && y > 400) { //Кнопка "Семя"
+    vib(100);
+    keydown({ code: "KeyG" });
+  }
   
   if (x >= 15 && x < 435 && y >= 15 && y < 435 && !pause) { //Добавка кликом
     vib(30);
-    const gnd = ground[Math.floor((x-15)*scale/options.gsize)][Math.floor((y-15)*scale/options.gsize)];
-    gnd.click();
-    counters.clicks++;
+    cadd(x, y);
   }
 }
 
@@ -2163,14 +2272,25 @@ function keydown(e) { //Зажатие клавиши
     case "KeyA": if (!astats) mods.add = true; break;
     case "KeyS": if (!astats) pause = true; break;
     case "KeyD": mods.draw = true; break;
-    case "KeyQ": if (pause) astats = 1; break;
+    case "KeyQ": if (pause && !astats) astats = 1; break;
     case "KeyW": if (pause) if (!astats) screenshot(); break;
     case "KeyE": if (pause) fullScreen(document.documentElement); break;
     case "KeyR": if (pause && !astats) restart(); break;
     case "KeyT": if (pause) stimer(); break;
     case "KeyF": if (astats) sscreenshot(); break;
-    case "ArrowLeft": sleft(); break;
-    case "ArrowRight": sright(); break;
+    case "KeyB": style.biggraph = !style.biggraph; break;
+    case "KeyN": style.onlygame = !style.onlygame; break;
+    case "KeyM": style.graphmove = !style.graphmove; break;
+    case "KeyC": if (astats == 3 || astats == 4 || astats == 6 || astats == 8) gstart(); break;
+    case "KeyV": if (astats == 3 || astats == 4 || astats == 6 || astats == 8) gcrop(); break;
+    case "KeyX": if (astats == 3 || astats == 4 || astats == 6 || astats == 8) gup(); break;
+    case "KeyZ": if (astats == 3 || astats == 4 || astats == 6 || astats == 8) gcancel(); break;
+    case "KeyG": if (!astats) srand(); break;
+    case "KeyH": if (!astats) alert("Случайное семя: "+rseed); break;
+    case "KeyP": if (!astats) sspeed(); break;
+    case "KeyL": mods.cblock = !mods.cblock; break;
+    case "ArrowLeft": if (astats) sleft(); break;
+    case "ArrowRight": if (astats) sright(); break;
   }
 }
 function keyup(e) { //Поднятие клавиши
@@ -2192,10 +2312,7 @@ function mousemove(e) { //Движение мышью
   const x = (e.pageX-cprops.left)/cprops.width*900;
   const y = (e.pageY-cprops.top)/cprops.height*450;
   
-  if (mods.add && x >= 15 && x < 435 && y >= 15 && y < 435) { //Модификация "Добавка"
-    const gnd = ground[Math.floor((x-15)*scale/options.gsize)][Math.floor((y-15)*scale/options.gsize)];
-    gnd.click();
-  }
+  if (mods.add && x >= 15 && x < 435 && y >= 15 && y < 435) cadd(x, y); //Модификация "Добавка"
   
   if (mods.draw) { //Модификация "Рисование"
     ctx.strokeStyle = "#a00000";
@@ -2220,20 +2337,20 @@ function mousemove(e) { //Движение мышью
 
 window.onload = function() {
   //Установка значений по умолчанию:
+  options.showspeed ??= 1;
   style.flycolor ??= "#00000080";
   style.firecolor ??= "#a03000";
   style.waterstcolor ??= "#00a0a0";
   options.airred ??= 0;
   options.airgreen ??= 0;
   options.airblue ??= 0;
-  options.airwhite ??= 0;
   
   resize();
   window.addEventListener('resize', resize);
   if (ejson) sessionStorage.setItem('plant_simulator_json', ""); //Очистка JSON
   wakelock();
   document.addEventListener('click', click); //Объявление обработчика кликов
-  document.addEventListener('mousemove', mousemove); //Объявление обработчика движения мышью
+  document.addEventListener('ontouchmove' in document ? 'touchmove':'mousemove', mousemove); //Объявление обработчика движения мышью
   
   //Объявление обработчиков клавиш:
   document.addEventListener('keydown', keydown);

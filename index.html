@@ -33,7 +33,7 @@
       <div id="speed">
         <p class="label">Скорость показа: </p>
         <p class="label">x</p>
-        <input type="number" style="width: 40px;" onchange="this.value = check(this.value, [0.01, 10, false]); window.showspeed = Number(this.value);" id="speedshow" value="1">
+        <input type="number" style="width: 40px" onchange="this.value = check(this.value, [0.001, 10, false]); window.showspeed = Number(this.value);" id="speedshow" value="1">
         <button id="speed_0.1" onclick="window.showspeed = 0.1; $('speedshow').value = 0.1;" class="speed">x0.1</button>
         <button id="speed_0.2" onclick="window.showspeed = 0.2; $('speedshow').value = 0.2;" class="speed">x0.2</button>
         <button id="speed_0.5" onclick="window.showspeed = 0.5; $('speedshow').value = 0.5;" class="speed">x0.5</button>

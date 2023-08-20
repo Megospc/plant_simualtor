@@ -1,6 +1,6 @@
 "use strict";
 
-const version = "1.6.4";  //Версия программы
+const version = "1.7.6";  //Версия программы
 const options_list = [ //Список настроек
   { id: "size", type: "num", default: 28, check: [8, 50, true], label: "Размер поля: ", f: x => x, g: x => x },
   { id: "ggreen", type: "num", default: 250, check: [50, 10000, false], label: "Изначальный зелёный: ", f: x => x, g: x => x },
@@ -75,10 +75,13 @@ const plants_props_list = [ //Список свойств растений
   { id: "airred", type: "num", default: 0, check: [-100, 100, false], label: "Углекислый газ: ", add: true, f: x => x, g: x => x },
   { id: "airgreen", type: "num", default: 0, check: [-100, 100, false], label: "Метан: ", add: true, f: x => x, g: x => x },
   { id: "airblue", type: "num", default: 0, check: [-100, 100, false], label: "Кислород: ", add: true, f: x => x, g: x => x },
-  { id: "airnred", type: "num", default: 0, check: [0, 10000000, false], label: "Нужный углекислый газ: ", add: true, f: x => x, g: x => x },
-  { id: "airngreen", type: "num", default: 0, check: [0, 10000000, false], label: "Нужный метан: ", add: true, f: x => x, g: x => x },
-  { id: "airnblue", type: "num", default: 0, check: [0, 10000000, false], label: "Нужный кислород: ", add: true, f: x => x, g: x => x },
+  { id: "airnred", type: "num", default: 0, check: [0, 10000000, false], label: "Необходимый углекислый газ: ", add: true, f: x => x, g: x => x },
+  { id: "airngreen", type: "num", default: 0, check: [0, 10000000, false], label: "Необходимый метан: ", add: true, f: x => x, g: x => x },
+  { id: "airnblue", type: "num", default: 0, check: [0, 10000000, false], label: "Необходимый кислород: ", add: true, f: x => x, g: x => x },
   { id: "aair", type: "num", default: 0, check: [-100, 100, false], label: "Газовая выносливость: ", add: true, f: x => x, g: x => x },
+  { id: "airdred", type: "num", default: 0, check: [0, 10000000, false], label: "Смертельный углекислый газ: ", add: true, f: x => x, g: x => x },
+  { id: "airdgreen", type: "num", default: 0, check: [0, 10000000, false], label: "Смертельный метан: ", add: true, f: x => x, g: x => x },
+  { id: "airdblue", type: "num", default: 0, check: [0, 10000000, false], label: "Смертельный кислород: ", add: true, f: x => x, g: x => x },
   { id: "big", type: "chk", default: false, label: "Большое", add: true, f: x => x, g: x => x },
   { id: "obscure", type: "chk", default: false, label: "Незаметное", add: true, f: x => x, g: x => x },
   { id: "nutrient", type: "chk", default: false, label: "Питательное", add: true, f: x => x, g: x => x },
@@ -115,9 +118,9 @@ const animals_props_list = [ //Список свойств животных
   { id: "airred", type: "num", default: 0, check: [-100, 100, false], label: "Углекислый газ: ", add: true, f: x => x, g: x => x },
   { id: "airgreen", type: "num", default: 0, check: [-100, 100, false], label: "Метан: ", add: true, f: x => x, g: x => x },
   { id: "airblue", type: "num", default: 0, check: [-100, 100, false], label: "Кислород: ", add: true, f: x => x, g: x => x },
-  { id: "airnred", type: "num", default: 0, check: [0, 10000000, false], label: "Нужный углекислый газ: ", add: true, f: x => x, g: x => x },
-  { id: "airngreen", type: "num", default: 0, check: [0, 10000000, false], label: "Нужный метан: ", add: true, f: x => x, g: x => x },
-  { id: "airnblue", type: "num", default: 0, check: [0, 10000000, false], label: "Нужный кислород: ", add: true, f: x => x, g: x => x },
+  { id: "airnred", type: "num", default: 0, check: [0, 10000000, false], label: "Необходимый углекислый газ: ", add: true, f: x => x, g: x => x },
+  { id: "airngreen", type: "num", default: 0, check: [0, 10000000, false], label: "Необходимый метан: ", add: true, f: x => x, g: x => x },
+  { id: "airnblue", type: "num", default: 0, check: [0, 10000000, false], label: "Необходимый кислород: ", add: true, f: x => x, g: x => x },
   { id: "aair", type: "num", default: 0, check: [-100, 100, false], label: "Газовая выносливость: ", add: true, f: x => x, g: x => x },
   { id: "division", type: "num", default: 0, check: [0, 100, false], label: "Деление — вероятность: ", add: true, f: x => x/100, g: x => x*100 },
   { id: "divzone", type: "num", default: 50, check: [0, 2500, false], label: "Деление — зона: ", add: true, f: x => x, g: x => x },
@@ -127,6 +130,11 @@ const animals_props_list = [ //Список свойств животных
   { id: "pazone", type: "num", default: 50, check: [0, 2500, false], label: "Паразит — зона: ", add: true, f: x => x, g: x => x },
   { id: "parasite", type: "num", default: 1, check: [0, 100, false], label: "Паразит — количество: ", add: true, f: x => x, g: x => x },
   { id: "vampire", type: "num", default: 0, check: [0, 100, false], label: "Вампиризм: ", add: true, f: x => x/100, g: x => x*100 },
+  { id: "timemin", type: "num", default: 0, check: [0, 120, false], label: "Старость (мин.): ", add: true, f: x => x*1000, g: x => x/1000 },
+  { id: "timemax", type: "num", default: 0, check: [0, 120, false], label: "Старость (макс.): ", add: true, f: x => x*1000+1, g: x => (x-1)/1000 },
+  { id: "airdred", type: "num", default: 0, check: [0, 10000000, false], label: "Смертельный углекислый газ: ", add: true, f: x => x, g: x => x },
+  { id: "airdgreen", type: "num", default: 0, check: [0, 10000000, false], label: "Смертельный метан: ", add: true, f: x => x, g: x => x },
+  { id: "airdblue", type: "num", default: 0, check: [0, 10000000, false], label: "Смертельный кислород: ", add: true, f: x => x, g: x => x },
   { id: "big", type: "chk", default: false, label: "Большое", add: true, f: x => x, g: x => x },
   { id: "carn", type: "chk", default: false, label: "Хищное", add: true, f: x => x, g: x => x },
   { id: "eggs", type: "chk", default: false, label: "Яйценос", add: true, f: x => x, g: x => x },
@@ -151,10 +159,13 @@ const funguses_props_list = [ //Список свойств грибов
   { id: "airred", type: "num", default: 0, check: [-100, 100, false], label: "Углекислый газ: ", add: true, f: x => x, g: x => x },
   { id: "airgreen", type: "num", default: 0, check: [-100, 100, false], label: "Метан: ", add: true, f: x => x, g: x => x },
   { id: "airblue", type: "num", default: 0, check: [-100, 100, false], label: "Кислород: ", add: true, f: x => x, g: x => x },
-  { id: "airnred", type: "num", default: 0, check: [0, 10000000, false], label: "Нужный углекислый газ: ", add: true, f: x => x, g: x => x },
-  { id: "airngreen", type: "num", default: 0, check: [0, 10000000, false], label: "Нужный метан: ", add: true, f: x => x, g: x => x },
-  { id: "airnblue", type: "num", default: 0, check: [0, 10000000, false], label: "Нужный кислород: ", add: true, f: x => x, g: x => x },
+  { id: "airnred", type: "num", default: 0, check: [0, 10000000, false], label: "Необходимый углекислый газ: ", add: true, f: x => x, g: x => x },
+  { id: "airngreen", type: "num", default: 0, check: [0, 10000000, false], label: "Необходимый метан: ", add: true, f: x => x, g: x => x },
+  { id: "airnblue", type: "num", default: 0, check: [0, 10000000, false], label: "Необходимый кислород: ", add: true, f: x => x, g: x => x },
   { id: "aair", type: "num", default: 0, check: [-100, 100, false], label: "Газовая выносливость: ", add: true, f: x => x, g: x => x },
+  { id: "airdred", type: "num", default: 0, check: [0, 10000000, false], label: "Смертельный углекислый газ: ", add: true, f: x => x, g: x => x },
+  { id: "airdgreen", type: "num", default: 0, check: [0, 10000000, false], label: "Смертельный метан: ", add: true, f: x => x, g: x => x },
+  { id: "airdblue", type: "num", default: 0, check: [0, 10000000, false], label: "Смертельный кислород: ", add: true, f: x => x, g: x => x },
   { id: "big", type: "chk", default: false, label: "Большой", add: true, f: x => x, g: x => x },
   { id: "water", type: "chk", default: false, label: "Водный", add: true, f: x => x, g: x => x }
 ];
@@ -187,7 +198,7 @@ function check(num, arr) { //Функция проверки числа
 function json() { //Функция создания JSON симуляции
   const style = { //Стиль симуляции
     size: 5,
-    resolution: resolution,
+    resolution,
     sort: true,
     flysize: 3,
     flyanim: 10,
@@ -199,17 +210,18 @@ function json() { //Функция создания JSON симуляции
     firecolor: "#a03000",
     watercolor: "#b0ffff",
     waterstcolor: "#00a0a0",
+	ground: 35,
     air: 35,
-    graphmove: graphmove,
-    biggraph: biggraph
+    graphmove,
+    biggraph
   };
   const options = { //Настройки симуляции
     flych: 0.01,
     flymax: 1000,
-    showspeed: showspeed,
-    music: music,
-    musictype: musictype,
-    vibrate: vibrate
+    showspeed,
+    music,
+    musictype,
+    vibrate
   };
   
   //Получение настроек:

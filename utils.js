@@ -11,9 +11,16 @@ const $add = (id, html) => $(id).innerHTML += html;
 const PI = Math.PI; //Число "π"
 
 //Случайные числа:
+const rmax = 2147483647;
+function* randf(seed) { //Генератор псевдослучайных чисел
+  while (true) {
+    seed = seed*16807%rmax;
+    yield seed;
+  }
+}
 const rnd = () => {
   counters.randoms++;
-  return Math.random();
+  return RANDOM.next().value/rmax;
 };
 const random = max => rnd()*max;
 const rand = (min, max) => random(max-min)+min;
@@ -23,11 +30,25 @@ const floor = (x, d) => Math.floor(x*(10**d))/(10**d); //Округление д
 const flr = x => floor(x, 1)%1 ? floor(x, 1).toString():floor(x, 1)+".0"; //Округление до десятых (строка)
 const dfloor = (x, d) => Math.floor(x/d)*d; //Округление вниз до точности d
 const dceil = (x, d) => Math.ceil(x/d)*d; //Округление вверх до точности d
+const numstr = x => { //Строка числа
+  const arr = ["", "K", "M", "B", "T", "Q", "Qi", "Sx", "Sp", "Oc", "No", "Dc", "Ud", "Dd", "Td"];
+  const i = Math.min(Math.max(Math.floor(Math.log10(x)/3), 0), arr.length-1);
+  return flr(x/(1000**i))+arr[i];
+};
 
 function hex(x) { //HEX
   x = Math.min(Math.max(Math.floor(x), 0), 255);
   const h = x.toString(16);
   return x < 16 ? "0"+h:h;
+}
+
+function pnum(a, min, max) { //Метод запроса числа
+  const str = prompt(a, ""); //Строка
+  const num = +str; //Число
+  
+  if (str === null) return null; //Если строка не введена
+  else if (isNaN(num) || num <= min || num > max) return null; //Если число неправильное
+  else return num;
 }
 
 //Преобразования:
@@ -61,27 +82,28 @@ async function wakelock() { //Метод отключения затемнени
   if (navigator.wakeLock) navigator.wakeLock.request("screen");
 }
 
-function sgraph(data, x, y, w, h, s, m) { //Метод прямоугольного графика
+function sgraph(data, x, y, w, h, s, m, c, f = 0, max) { //Метод прямоугольного графика
   const width = w/8*6; //Ширина тела в пикселях
   const height = h/8*6; //Высота тела в пикселях
-  const len = data[0].arr.length; //Длина информации
-  const fs = m ? (len < width ? 0:len-width):0; //Начало графика
+  const len = c ?? data[0].arr.length; //Длина информации
+  const fs = m ? (len < width ? 0:len-width):f; //Начало графика
   const ts = fs*fpsTime; //Начало в миллисекундах
-  const fw = m ? (len < width ? len:width):len; //Ширина в кадрах
+  const fw = m ? (len < width ? len:width):len-f; //Ширина в кадрах
   const tw = fw*fpsTime; //Ширина в миллисекундах
   
-  //Поиск максимального значения:
-  let max = 2; //Максимальное значение
-  for (let j = 0; j < width; j++) { //Проверка всех отображаемых кадров графика
-    for (let i = 0; i < data.length; i++) { //Проверка всех состояний
-      const k = Math.floor(j/width*fw)+fs;
-      const s = data[i].state;
-      const c = data[i].arr[k];
-      if (!s.hiddengraph) if (c > max) max = c; //Если не указанно "Не отображать на графике"
+  if (!max) { //Поиск максимального значения
+    max = 2;
+    for (let j = 0; j < width; j++) { //Проверка всех отображаемых кадров графика
+      for (let i = 0; i < data.length; i++) { //Проверка всех состояний
+        const k = Math.floor(j/width*fw)+fs;
+        const s = data[i].state;
+        const c = data[i].arr[k];
+        if (!s.hiddengraph) if (c > max) max = c; //Если не указанно "Не отображать на графике"
+      }
     }
   }
   
-  ctx.strokeStyle = theme.elements;
+  ctx.strokeStyle = "#d0d0d0";
   ctx.lineWidth = S(1);
   ctx.lineCap = "butt";
   
@@ -111,7 +133,7 @@ function sgraph(data, x, y, w, h, s, m) { //Метод прямоугольно�
   
   //Отрисовка легенды:
   ctx.font = S(9)+"px "+font;
-  ctx.fillStyle = theme.elements;
+  ctx.fillStyle = "#d0d0d0";
   ctx.textBaseline = "hanging";
   ctx.fillText(Math.floor(max), S(x), S(y+h/8), S(w/8));
   ctx.textBaseline = "middle";
@@ -124,10 +146,11 @@ function sgraph(data, x, y, w, h, s, m) { //Метод прямоугольно�
   ctx.fillText(flr((ts+tw/2)/1000), S(x+w/2), S(y+h*0.95), S(w/8*1.5));
   ctx.fillText(flr((ts+tw/4*3)/1000), S(x+w/8*5.5), S(y+h*0.95), S(w/8*1.5));
   ctx.fillText(flr((ts+tw)/1000), S(x+w*0.875), S(y+h*0.95), S(w/8*1.5));
-  ctx.textBaseline = "middle";
+  ctx.textBaseline = "alphabetic";
   
   //Отрисовка графика:
   ctx.lineWidth = S(2);
+  ctx.lineJoin  = "bevel";
   for (let i = 0; i < data.length; i++) { //Отрисовка линий видов
     const s = data[i].state; //Вид
     if (!s.hiddengraph) { //Если не указанно "Не отображать на графике"
@@ -135,7 +158,7 @@ function sgraph(data, x, y, w, h, s, m) { //Метод прямоугольно�
       ctx.beginPath();
       for (let k = 0; k < width; k++) { //Отрисовка линни вида
         const j = Math.floor(k/width*fw)+fs;
-        const v = h/8*7-data[i].arr[j]/max*height+y;
+        const v = h/8*7-Math.min(data[i].arr[j]/max, 1)*height+y;
         
         if (x) ctx.lineTo(S(x+k+w/8), S(v));
         else ctx.moveTo(S(x+k+w/8), S(v));
@@ -143,6 +166,7 @@ function sgraph(data, x, y, w, h, s, m) { //Метод прямоугольно�
       ctx.stroke();
     }
   }
+  ctx.lineJoin = "miter";
   
   if (s) if (s.x > x+w/8 && s.x <= x+w/8*7 && s.y > y+h/8 && s.y <= y+h/8*7) { //Отрисовка выделения
     ctx.strokeStyle = "#a0000080";
@@ -158,7 +182,7 @@ function sgraph(data, x, y, w, h, s, m) { //Метод прямоугольно�
     ctx.textAlign = "center";
     ctx.textBaseline = "top";
     ctx.fillText(flr(((s.x-x-w/8)/width*tw+ts)/1000), S(s.x), S(y+h/8*7.2));
-    ctx.textBaseline = "middle";
+    ctx.textBaseline = "alphabetic";
     ctx.textAlign = "left";
     ctx.fillText(Math.floor(((1-(s.y-y-h/8)/height)*max)), S(x+w/8*7.2), S(s.y));
   }
