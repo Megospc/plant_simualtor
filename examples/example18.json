@@ -1,0 +1,89 @@
+{
+  "name": "гипноз",
+  "options": {
+    "ggreen": 250,
+    "gblue": 250,
+    "gred": 250,
+    "gigreen": 1,
+    "giblue": 1,
+    "gired": 1,
+    "size": 28,
+    "gsize": 15,
+    "vibrate": true,
+    "cgreen": 250,
+    "cblue": 250,
+    "cred": 250,
+    "btype": "thor",
+    "musictype": 0,
+    "music": true,
+    "fireprob": 0.05,
+    "firezone": 30,
+    "firetime": 500
+  },
+  "style": {
+    "size": 5,
+    "resolution": 1800,
+    "sort": true,
+    "firecolor": "#a03000",
+    "fireanimmin": 56,
+    "fireanimmax": 200,
+    "fireanimc": 0.3,
+    "fireanimr": 5,
+    "ground": 35
+  },
+  "plants": [
+    {
+      "name": "растения",
+      "color": "#00a000",
+      "faze": 6,
+      "consg": 1,
+      "consb": 1,
+      "consr": 1,
+      "initial": 100,
+      "fruitsmin": 1,
+      "fruitsmax": 4,
+      "fzone": 50,
+      "ngrowmin": 2,
+      "ngrowmax": 40,
+      "boom": 0.4,
+      "fvalue": 20
+    }
+  ],
+  "animals": [
+    {
+      "name": "животные",
+      "color": "#00a0a0",
+      "initial": 3,
+      "change": 0.01,
+      "speed": 5,
+      "prob": 0.2,
+      "zone": 40,
+      "hungry": 300,
+      "hinc": 0.5,
+      "muln": 330,
+      "eggs": true,
+      "egrowmin": 100,
+      "egrowmax": 200,
+      "fvalue": 50
+    },
+    {
+      "name": "гипноз",
+      "color": "#5000a0",
+      "initial": 3,
+      "change": 0.01,
+      "speed": 5,
+      "prob": 0.2,
+      "zone": 40,
+      "hungry": 300,
+      "hinc": 0.5,
+      "muln": 330,
+      "eggs": true,
+      "egrowmin": 100,
+      "egrowmax": 200,
+      "fvalue": 50,
+      "sleprob": 0.1,
+      "slezone": 100,
+      "sleep": 2000
+    }
+  ]
+}

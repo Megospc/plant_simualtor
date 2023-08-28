@@ -15,7 +15,8 @@
     "cred": 250,
     "btype": "thor",
     "musictype": 0,
-    "music": true
+    "music": true,
+    "funga": 32
   },
   "style": {
     "size": 5,

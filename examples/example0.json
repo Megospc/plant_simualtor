@@ -33,7 +33,8 @@
     "airgreen": 500000,
     "airred": 500000,
     "fairblue": -5,
-    "fairred": 5
+    "fairred": 5,
+    "funga": 32
   },
   "style": {
     "size": 5,

@@ -1,0 +1,65 @@
+{
+  "name": "пожар",
+  "options": {
+    "ggreen": 250,
+    "gblue": 250,
+    "gred": 250,
+    "gigreen": 1,
+    "giblue": 1,
+    "gired": 1,
+    "size": 28,
+    "gsize": 15,
+    "vibrate": true,
+    "cgreen": 250,
+    "cblue": 250,
+    "cred": 250,
+    "btype": "thor",
+    "musictype": 0,
+    "music": true,
+    "fireprob": 0.05,
+    "firezone": 30,
+    "firetime": 500
+  },
+  "style": {
+    "size": 5,
+    "resolution": 1800,
+    "sort": true,
+    "firecolor": "#a03000",
+    "fireanimmin": 56,
+    "fireanimmax": 200,
+    "fireanimc": 0.3,
+    "fireanimr": 5,
+    "ground": 35
+  },
+  "plants": [
+    {
+      "name": "растения",
+      "color": "#00a000",
+      "faze": 12,
+      "consg": 1,
+      "consb": 1,
+      "consr": 1,
+      "initial": 100,
+      "fruitsmin": 1,
+      "fruitsmax": 4,
+      "fzone": 50,
+      "ngrowmin": 2,
+      "ngrowmax": 40
+    },
+    {
+      "name": "возгорюки",
+      "color": "#000000",
+      "faze": 12,
+      "consg": 1,
+      "consb": 1,
+      "consr": 1,
+      "initial": 50,
+      "fruitsmin": 1,
+      "fruitsmax": 4,
+      "fzone": 50,
+      "ngrowmin": 2,
+      "ngrowmax": 40,
+      "fire": 0.00001
+    }
+  ]
+}

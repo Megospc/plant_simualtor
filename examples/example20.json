@@ -1,0 +1,62 @@
+{
+  "name": "наводнение",
+  "options": {
+    "ggreen": 250,
+    "gblue": 250,
+    "gred": 250,
+    "gigreen": 0.1,
+    "giblue": 0.1,
+    "gired": 0.1,
+    "size": 28,
+    "gsize": 15,
+    "vibrate": true,
+    "cgreen": 250,
+    "cblue": 250,
+    "cred": 250,
+    "btype": "thor",
+    "musictype": 0,
+    "music": true,
+    "iwater": 0.1,
+    "water": 0.001,
+    "awater": 0.01
+  },
+  "style": {
+    "size": 5,
+    "resolution": 1800,
+    "sort": true,
+    "ground": 35,
+    "watercolor": "#b0ffff",
+    "waterstcolor": "#00a0a0"
+  },
+  "plants": [
+    {
+      "name": "водоросли",
+      "color": "#00a0a0",
+      "faze": 12,
+      "consg": 1,
+      "consb": 1,
+      "consr": 1,
+      "initial": 3,
+      "fruitsmin": 1,
+      "fruitsmax": 4,
+      "fzone": 210,
+      "ngrowmin": 2,
+      "ngrowmax": 40,
+      "water": true
+    },
+    {
+      "name": "растения",
+      "color": "#00a000",
+      "faze": 12,
+      "consg": 1,
+      "consb": 1,
+      "consr": 1,
+      "initial": 3,
+      "fruitsmin": 1,
+      "fruitsmax": 4,
+      "fzone": 210,
+      "ngrowmin": 2,
+      "ngrowmax": 40
+    }
+  ]
+}
