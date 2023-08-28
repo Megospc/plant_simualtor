@@ -12,6 +12,7 @@ const PI = Math.PI; //Число "π"
 
 //Случайные числа:
 const rmax = 2147483647;
+const maxseed = 36**4;
 function* randf(seed) { //Генератор псевдослучайных чисел
   while (true) {
     seed = seed*16807%rmax;
@@ -42,9 +43,15 @@ function hex(x) { //HEX
   return x < 16 ? "0"+h:h;
 }
 
-function pnum(a, min, max) { //Метод запроса числа
+function hash(x, n) { //Хэширование
+  let h = x.toString(36).toUpperCase();
+  while (h.length < n) h = "0"+h;
+  return h;
+}
+
+function pnum(a, min, max, base) { //Метод запроса числа
   const str = prompt(a, ""); //Строка
-  const num = +str; //Число
+  const num = parseInt(str, base); //Число
   
   if (str === null) return null; //Если строка не введена
   else if (isNaN(num) || num <= min || num > max) return null; //Если число неправильное
@@ -83,6 +90,8 @@ async function wakelock() { //Метод отключения затемнени
 }
 
 function sgraph(data, x, y, w, h, s, m, c, f = 0, max) { //Метод прямоугольного графика
+  ctx.save();
+  
   const width = w/8*6; //Ширина тела в пикселях
   const height = h/8*6; //Высота тела в пикселях
   const len = c ?? data[0].arr.length; //Длина информации
@@ -146,7 +155,6 @@ function sgraph(data, x, y, w, h, s, m, c, f = 0, max) { //Метод прямо
   ctx.fillText(flr((ts+tw/2)/1000), S(x+w/2), S(y+h*0.95), S(w/8*1.5));
   ctx.fillText(flr((ts+tw/4*3)/1000), S(x+w/8*5.5), S(y+h*0.95), S(w/8*1.5));
   ctx.fillText(flr((ts+tw)/1000), S(x+w*0.875), S(y+h*0.95), S(w/8*1.5));
-  ctx.textBaseline = "alphabetic";
   
   //Отрисовка графика:
   ctx.lineWidth = S(2);
@@ -166,7 +174,6 @@ function sgraph(data, x, y, w, h, s, m, c, f = 0, max) { //Метод прямо
       ctx.stroke();
     }
   }
-  ctx.lineJoin = "miter";
   
   if (s) if (s.x > x+w/8 && s.x <= x+w/8*7 && s.y > y+h/8 && s.y <= y+h/8*7) { //Отрисовка выделения
     ctx.strokeStyle = "#a0000080";
@@ -186,10 +193,14 @@ function sgraph(data, x, y, w, h, s, m, c, f = 0, max) { //Метод прямо
     ctx.textAlign = "left";
     ctx.fillText(Math.floor(((1-(s.y-y-h/8)/height)*max)), S(x+w/8*7.2), S(s.y));
   }
+  
+  ctx.restore();
 }
 
 
 function rgraph(data, x, y, r, s) { //Метод круглого графика
+  ctx.save();
+  
   //Подсчёт суммы:
   let sum = 0;
   for (let i = 0; i < data.length; i++) sum += data[i].value;
@@ -235,6 +246,7 @@ function rgraph(data, x, y, r, s) { //Метод круглого графика
     ctx.fillStyle = "#ffffff";
     ctx.fillText(data[si].state.name+" | "+flr(sp*100)+"%", S(sx), S(sy-size));
     ctx.shadowBlur = 0;
-    ctx.textAlign = "left";
   }
+  
+  ctx.restore();
 }

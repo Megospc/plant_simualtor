@@ -22,7 +22,7 @@
 
 "use strict";
 
-const version = "1.7.7"; //Версия программы
+const version = "1.8.2"; //Версия программы
 const fps = 30; //Количество кадров в секунду
 const fpsTime = 1000/fps; //Миллисекунд на кадр
 const font = "Monospace"; //Шрифт текста
@@ -62,7 +62,8 @@ const defaultJSON = `{
     "airgreen": 500000,
     "airred": 500000,
     "fairblue": -5,
-    "fairred": 5
+    "fairred": 5,
+    "funga": 32
   },
   "style": {
     "size": 5,
@@ -338,6 +339,8 @@ const funguses = obj.funguses ?? []; //Массив видов грибов
 const canvas = $('canvas'); //Объект холста
 const ctx = canvas.getContext('2d'); //Контекст холста
 const music = new Audio("assets/music"+(options.musictype ?? 0)+".mp3"); //Музыка (от zvukipro.com)
+const icon = new Image(); //Иконка
+icon.src = "assets/icon.svg";
 var RANDOM; //Случайные числа
 var rseed; //Случачайное семя
 var frame; //Счётчик кадров
@@ -362,6 +365,7 @@ var ptime; //Время на расчёт
 var timer; //Таймер
 const S = x => x*cscale; //Функция масштабирования холста
 const timeNow = () => frame*fpsTime; //Функция игрового времени
+const rhash = () => hash(rseed, 4).toUpperCase(); //Хэш случайного семени
 
 function clear() { //Метод очистки холста
   ctx.fillStyle = "#ffffff";
@@ -371,7 +375,7 @@ function clear() { //Метод очистки холста
 function testCord(x, size) { //Функция проверки координат
   const fsize = options.size*options.gsize; //Полный размер
   const min = size/2; //Минимальное значение
-  const max = fsize-size/2; //Максимальное значение
+  const max = fsize-1-size/2; //Максимальное значение
   const leg = x => Math.min(Math.max(x, min), max); //Доп-проверка
   switch (options.btype ?? "thor") { //Тип "бортиков"
     case "limited": //Обычные
@@ -398,14 +402,15 @@ function startrender() { //Отрисовка стартового меню
   
   //Отрисовка текста:
   ctx.textAlign = "center";
-  ctx.fillStyle = "#00a000a0";
+  ctx.fillStyle = "#60a000";
   ctx.font = S(20)+"px "+font;
-  ctx.fillText("Кликните, чтобы продолжить", S(450), S(250));
+  ctx.fillText("Кликните, чтобы продолжить", S(450), S(360));
   ctx.font = S(36)+"px "+font;
-  ctx.fillText("Симулятор Растений", S(450), S(150));
+  ctx.fillText("Симулятор Растений", S(450), S(80));
   ctx.font = S(15)+"px "+font;
-  ctx.fillText("Загрузка завершена...", S(450), S(300));
+  ctx.fillText("Загрузка завершена...", S(450), S(400));
   ctx.textAlign = "left";
+  ctx.drawImage(icon, S(360), S(125), S(180), S(180));
 }
 
 function vib(len) { //Метод вибрации
@@ -600,7 +605,7 @@ class Ground { //Класс земли
     this.g = options.ggreen;
     this.b = options.gblue;
     
-    if (options.water && prob(options.iwater)) { //Наводнение
+    if (prob(options.iwater)) { //Наводнение
       this.water = true;
       
       //Обновление счётчиков:
@@ -640,12 +645,12 @@ class Ground { //Класс земли
   handler() { //Метод обработчика
     //Обработка наводнения:
     if (this.water) {
-      if (options.awater && prob(options.awater)) {
+      if (prob(options.awater)) {
         this.water = false;
         counters.water.count--; //Обновление счётчика
       }
     } else {
-      if (options.water && prob(options.water)) {
+      if (prob(options.water)) {
         this.water = true;
         
         //Обновление счётчиков:
@@ -1224,7 +1229,7 @@ class Mycelium { //Класс грибниц
     });
     
     let gnds = []; //Массив земель под грибницой
-    for (let x = dfloor(this.x-this.grow/2, options.gsize); x < dceil(this.x+this.grow/2, options.gsize); x += options.gsize) for (let y = dfloor(this.y-this.grow/2, options.gsize); y < dceil(this.y+this.grow/2, options.gsize); y += options.gsize) gnds.push(ground[Math.floor(Math.min(testCord(x, 0), fsize-1)/options.gsize)][Math.floor(Math.min(testCord(y, 0), fsize-1)/options.gsize)]); //Заполнение массива
+    for (let x = dfloor(this.x-this.grow/2, options.gsize); x < dceil(this.x+this.grow/2, options.gsize); x += options.gsize) for (let y = dfloor(this.y-this.grow/2, options.gsize); y < dceil(this.y+this.grow/2, options.gsize); y += options.gsize) gnds.push(ground[Math.floor(testCord(x, 0)/options.gsize)][Math.floor(testCord(y, 0)/options.gsize)]); //Заполнение массива
     
     const cc = Math.sqrt(gnds.length); //Коэффициент потребления
     
@@ -1251,14 +1256,14 @@ class Mycelium { //Класс грибниц
     this.grow = Math.min(this.grow+(state.grow ?? 1), state.max); //Рост
   }
   render() {
-    if (style.funga) {
+    if (options.funga) {
       const state = funguses[this.state]; //Вид грибницы
       const fsize = options.size*options.gsize; //Полный размер
       const f = x => Math.min(Math.max(x, 0), fsize);
       const h = this.grow/2;
       const x = this.x;
       const y = this.y;
-      ctx.fillStyle = state.color+hex(style.funga);
+      ctx.fillStyle = state.color+hex(options.funga);
       
       function draw(x0, y0, x1, y1) {
         ctx.beginPath();
@@ -1270,7 +1275,17 @@ class Mycelium { //Класс грибниц
         ctx.fill();
       }
       
-      draw(x-h, y-h, x+h, y+h);
+      if (options.btype == "thor") {
+        function X(y0, y1) {
+          draw(x-h, y0, x+h, y1);
+          if (x+h > fsize) draw(0, y0, Math.min((x+h)%fsize, x-h), y1);
+          if (x-h < 0) draw(Math.max(fsize-((h-x)%fsize), x+h), y0, fsize, y1);
+        }
+        
+        X(y-h, y+h);
+        if (y+h > fsize) X(0, Math.min((y+h)%fsize, y-h));
+        if (y-h < 0) X(Math.max(fsize-((h-y)%fsize), y+h), fsize);
+      } else draw(x-h, y-h, x+h, y+h);
     }
   }
 }
@@ -1474,7 +1489,7 @@ class Plant { //Класс растений
 
 function start(seed) { //Метод инициализации
   //Случайные числа:
-  rseed = seed ?? (Math.random()*99999+1);
+  rseed = seed ?? (Math.random()*maxseed+1);
   rseed = Math.floor(rseed);
   RANDOM = randf(rseed);
   
@@ -1813,7 +1828,7 @@ function frame_() { //Метод кадра
           ctx.fillText("Средний расчёт: "+floor(time/frame, 2)+"мс", S(20), S(200), S(860));
           ctx.fillText("Количество ячеек: "+arr.length, S(20), S(230), S(860));
           ctx.fillText("Количество случайных чисел: "+numstr(counters.randoms), S(20), S(260), S(860));
-          ctx.fillText("Случайное семя: "+rseed, S(20), S(290), S(860));
+          ctx.fillText("Случайное семя: "+rhash(), S(20), S(290), S(860));
           ctx.fillText("Количество добавок кликом: "+counters.clicks, S(20), S(320), S(860));
         }
         break;
@@ -1849,6 +1864,7 @@ function frame_() { //Метод кадра
     ctx.fillRect(S(860), S(410), S(10), S(10));
     ctx.fillStyle = "#d0d0d0";
     ctx.fillRect(S(863), S(413), S(4), S(4));
+    
     return;
   }
   
@@ -1866,7 +1882,7 @@ function frame_() { //Метод кадра
     
     //Расчёт суммарной популяции:
     let sum = 0;
-    for (let i = 0; i < sorted.length; i++) if (!sorted[i].type != "water") {
+    for (let i = 0; i < sorted.length; i++) if (sorted[i].type != "water") {
       sum += sorted[i].counter.count;
       sum += sorted[i].counter.eggs ?? 0;
       sum += sorted[i].counter.fruits ?? 0;
@@ -1967,7 +1983,7 @@ function frame_() { //Метод кадра
     
     //Расчёт суммарной популяции:
     let sum = 0;
-    for (let i = 0; i < sorted.length; i++) if (!sorted[i].type != "water") sum += sorted[i].counter.count;
+    for (let i = 0; i < sorted.length; i++) if (sorted[i].type != "water") sum += sorted[i].counter.count;
     
     ctx.fillText(sum + " | сумма", S(490), S(style.biggraph ? 350:150));
     
@@ -2082,7 +2098,7 @@ function frame_() { //Метод кадра
 }
 
 function srand() { //Установка семени
-  const r = pnum("Введите семя:", 0, 100000);
+  const r = pnum("Введите семя:", -1, maxseed-1, 36)+1;
   if (r) restart(r);
 }
 
@@ -2128,7 +2144,7 @@ function screenshot() { //Метод скришота
   scr.fillText("Plant Simulator", S(630), S(430));
   
   const url = s.toDataURL('image/png'); //Получение base64-изображения
-  download(url, `plant_simulator_screenshot_${obj.name}.png`); //Скачивание изображения
+  download(url, `plant_simulator_screenshot_${obj.name}_${rhash()}.png`); //Скачивание изображения
 }
 function sscreenshot() { //Метод скришота статистики
   //Создание копии холста:
@@ -2148,7 +2164,7 @@ function sscreenshot() { //Метод скришота статистики
   scr.fillText("Plant Simulator", S(700), S(30));
   
   const url = s.toDataURL('image/png'); //Получение base64-изображения
-  download(url, `plant_simulator_screenshot_${obj.name}.png`); //Скачивание изображения
+  download(url, `plant_simulator_screenshot_${obj.name}_${rhash()}_stats_${astats}.png`); //Скачивание изображения
 }
 
 function sspeed() {
@@ -2250,7 +2266,7 @@ function click(e) { //Обработчик кликов
   }
   if (pause && x > 600 && x < 630 && y > 400) { //Кнопка "Семя"
     vib(100);
-    keydown({ code: "KeyG" });
+    srand();
   }
   
   if (x >= 15 && x < 435 && y >= 15 && y < 435 && !pause) { //Добавка кликом
@@ -2273,10 +2289,10 @@ function keydown(e) { //Зажатие клавиши
     case "KeyS": if (!astats) pause = true; break;
     case "KeyD": mods.draw = true; break;
     case "KeyQ": if (pause && !astats) astats = 1; break;
-    case "KeyW": if (pause) if (!astats) screenshot(); break;
-    case "KeyE": if (pause) fullScreen(document.documentElement); break;
+    case "KeyW": if (pause && !astats) screenshot(); break;
+    case "KeyE": if (pause && !astats) fullScreen(document.documentElement); break;
     case "KeyR": if (pause && !astats) restart(); break;
-    case "KeyT": if (pause) stimer(); break;
+    case "KeyT": if (pause && !astats) stimer(); break;
     case "KeyF": if (astats) sscreenshot(); break;
     case "KeyB": style.biggraph = !style.biggraph; break;
     case "KeyN": style.onlygame = !style.onlygame; break;
@@ -2285,9 +2301,9 @@ function keydown(e) { //Зажатие клавиши
     case "KeyV": if (astats == 3 || astats == 4 || astats == 6 || astats == 8) gcrop(); break;
     case "KeyX": if (astats == 3 || astats == 4 || astats == 6 || astats == 8) gup(); break;
     case "KeyZ": if (astats == 3 || astats == 4 || astats == 6 || astats == 8) gcancel(); break;
-    case "KeyG": if (!astats) srand(); break;
-    case "KeyH": if (!astats) alert("Случайное семя: "+rseed); break;
-    case "KeyP": if (!astats) sspeed(); break;
+    case "KeyG": if (pause && !astats) srand(); break;
+    case "KeyH": if (pause && !astats) alert("Случайное семя: "+rhash()+(counters.clicks ? "\nс добавками":"")); break;
+    case "KeyP": if (pause && !astats) sspeed(); break;
     case "KeyL": mods.cblock = !mods.cblock; break;
     case "ArrowLeft": if (astats) sleft(); break;
     case "ArrowRight": if (astats) sright(); break;
@@ -2335,6 +2351,16 @@ function mousemove(e) { //Движение мышью
   mods.last = { x, y };
 }
 
+function error(e) { //Обработка ошибок
+  alert(`=== ОШИБКА ===
+Произошёл сбой в программе.
+Сообщение: ${e.error.name}: ${e.error.message}
+Исходник: ${e.filename}
+Строка: ${e.lineno}:${e.colno}
+  `);
+  window.location.reload();
+};
+
 window.onload = function() {
   //Установка значений по умолчанию:
   options.showspeed ??= 1;
@@ -2360,4 +2386,6 @@ window.onload = function() {
   //Объявление обработчиков клавиш:
   document.addEventListener('keydown', keydown);
   document.addEventListener('keyup', keyup);
+  
+  window.addEventListener('error', error); //Объявление обработчика ошибок
 };

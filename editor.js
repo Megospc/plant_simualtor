@@ -1,6 +1,6 @@
 "use strict";
 
-const version = "1.7.7";  //Версия программы
+const version = "1.8.2";  //Версия программы
 const options_list = [ //Список настроек
   { id: "size", type: "num", default: 28, check: [8, 50, true], label: "Размер поля: ", f: x => x, g: x => x },
   { id: "ggreen", type: "num", default: 250, check: [50, 10000, false], label: "Изначальный зелёный: ", f: x => x, g: x => x },
@@ -30,7 +30,8 @@ const options_list = [ //Список настроек
   { id: "awater", type: "num", default: 0.1, check: [0, 100, false], label: "Наводнение — сход: ", f: x => x/100, g: x => x*100 },
   { id: "airred", type: "num", default: 0, check: [0, 10000000, false], label: "Атмосфера — углекислый газ: ", f: x => x, g: x => x },
   { id: "airgreen", type: "num", default: 0, check: [0, 10000000, false], label: "Атмосфера — метан: ", f: x => x, g: x => x },
-  { id: "airblue", type: "num", default: 0, check: [0, 10000000, false], label: "Атмосфера — кислород: ", f: x => x, g: x => x }
+  { id: "airblue", type: "num", default: 0, check: [0, 10000000, false], label: "Атмосфера — кислород: ", f: x => x, g: x => x },
+  { id: "funga", type: "num", default: 0, check: [0, 100, true], label: "Подсветка грибниц: ", f: x => x, g: x => x },
 ];
 const plants_props_list = [ //Список свойств растений
   { id: "faze", type: "num", default: 12, check: [1, 500, true], label: "Длина фазы: ", f: x => x, g: x => x },
@@ -210,7 +211,7 @@ function json() { //Функция создания JSON симуляции
     firecolor: "#a03000",
     watercolor: "#b0ffff",
     waterstcolor: "#00a0a0",
-	ground: 35,
+    ground: 35,
     air: 35,
     graphmove,
     biggraph

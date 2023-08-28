@@ -1,8 +1,3 @@
-#noscripthelp {
-  color: #0000ff;
-  font-family: Monospace, sans-serif;
-  font-size: 18px;
-}
 #noscript {
   color: #a00000;
   font-family: Monospace, sans-serif;
@@ -111,8 +106,8 @@
   height: 30px;
 }
 input[type="number"] {
-  width: 50px;
-  height: 13px;
+  width: 4em;
+  height: 1em;
   border-radius: 3px;
   border: 1px solid #808080;
   font-family: Monospace, sans-serif;

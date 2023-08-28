@@ -20,7 +20,7 @@
   </style>
 </head>
 <body>
-  <h1 style="margin-bottom: 5px;">Примеры</h1>
+  <h1 style="margin-bottom: 5px">Примеры</h1>
   <div id="examples" style="margin-top: 20px"></div>
 </body>
 </html>
@@ -44,8 +44,15 @@
     "микориза", //08-08-2023
     "атака", //08-08-2023
     "ядовитое", //08-08-2023
-    "сон-травы" //08-08-2023
+    "сон-травы", //08-08-2023
+    "пожар", //20-08-2023
+    "гипноз", //21-08-2023
+    "битва грибов", //23-08-2023
+    "наводнение", //24-08-2023
+    "атмосфера", //24-08-2023
+    "хвощи" //26-08-2023
   ];
+  
   example(arr[0]);
   function example(name) {
     examples.innerHTML += `<div><a href="example.html?play=${num}" target="_blank"><b>${name}</b></a><a href="examples/example${num}.json" download="${name}.json"><img src="assets/download.svg"></a><a href="example.html?play=${num}&edit=1" target="_blank"><img src="assets/edit.svg"></a></div>`;
