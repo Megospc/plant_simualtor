@@ -22,7 +22,7 @@
 
 "use strict";
 
-const version = "1.8.2"; //Версия программы
+const version = "1.8.3"; //Версия программы
 const fps = 30; //Количество кадров в секунду
 const fpsTime = 1000/fps; //Миллисекунд на кадр
 const font = "Monospace"; //Шрифт текста
@@ -365,7 +365,7 @@ var ptime; //Время на расчёт
 var timer; //Таймер
 const S = x => x*cscale; //Функция масштабирования холста
 const timeNow = () => frame*fpsTime; //Функция игрового времени
-const rhash = () => hash(rseed, 4).toUpperCase(); //Хэш случайного семени
+const rhash = () => hash(rseed-1, 4).toUpperCase(); //Хэш случайного семени
 
 function clear() { //Метод очистки холста
   ctx.fillStyle = "#ffffff";
